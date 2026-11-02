@@ -92,6 +92,12 @@ jobs:
         run: |
           wp-env run cli wp option update woocommerce_custom_orders_table_enabled yes
           wp-env run cli wp eval-file wp-content/plugins/patsch9-orderdate/tests/integration.php
+      - name: Browser regression for product, classic checkout and Checkout Block
+        run: |
+          wp-env run cli wp theme install storefront --activate
+          wp-env run cli wp eval-file wp-content/plugins/patsch9-orderdate/tests/browser-fixtures.php | tee /tmp/p9od-fixtures.log
+          npm install --no-save --no-package-lock --ignore-scripts playwright@1.62.1
+          node tests/browser-checkout.cjs /tmp/p9od-fixtures.log
       - name: Stop disposable environment
         if: always()
-        run: wp-env destroy
+        run: wp-env stop

@@ -44,8 +44,23 @@ final class Blocks {
 				return $block;
 			}
 		}
-		$block['innerBlocks'][] = array( 'blockName' => self::NS . '/pickup-date', 'attrs' => array(), 'innerBlocks' => array(), 'innerHTML' => '', 'innerContent' => array() );
-		$block['innerContent'][] = null;
+		$position = count( $block['innerBlocks'] );
+		foreach ( $block['innerBlocks'] as $index => $child ) {
+			if ( in_array( $child['blockName'], array( 'woocommerce/checkout-terms-block', 'woocommerce/checkout-actions-block' ), true ) ) {
+				$position = $index;
+				break;
+			}
+		}
+		$offset = count( $block['innerContent'] );
+		$child_index = 0;
+		foreach ( $block['innerContent'] as $index => $fragment ) {
+			if ( null === $fragment && $child_index++ === $position ) {
+				$offset = $index;
+				break;
+			}
+		}
+		array_splice( $block['innerBlocks'], $position, 0, array( array( 'blockName' => self::NS . '/pickup-date', 'attrs' => array(), 'innerBlocks' => array(), 'innerHTML' => '', 'innerContent' => array() ) ) );
+		array_splice( $block['innerContent'], $offset, 0, array( null ) );
 		return $block;
 	}
 
