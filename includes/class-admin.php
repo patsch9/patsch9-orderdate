@@ -127,7 +127,7 @@ final class Admin {
 		self::window_editor( 'p9od_time_windows', $settings['time_windows'] );
 		echo '<p>' . esc_html__( 'Globale Zeitfenster gelten für Produkte mit „Globale Zeitfenster übernehmen“. Eine leere globale Liste lässt die reine Datumsauswahl bestehen. Bereits begonnene Zeitfenster am heutigen Tag sind nicht buchbar.', 'patsch9-orderdate' ) . '</p>';
 		submit_button();
-		echo '</form><p>' . esc_html__( 'Die Terminauswahl ersetzt keine Versandart. Konfiguriere Abholung separat in WooCommerce. Termin-Kapazitäten und mehrere Abholorte sind nicht enthalten.', 'patsch9-orderdate' ) . '</p></div>';
+		echo '</form><p>' . esc_html__( 'Abholorte unter WooCommerce → Einstellungen → Versand konfigurieren. Offene Abholungen stehen im Abholmanager.', 'patsch9-orderdate' ) . '</p></div>';
 	}
 
 	public static function save_settings(): void {
@@ -154,9 +154,10 @@ final class Admin {
 
 	public static function assets(): void {
 		$screen = get_current_screen();
-		if ( $screen && ( 'product' === $screen->id || 'woocommerce_page_p9od' === $screen->id ) ) {
+		if ( $screen && in_array( $screen->id, array( 'product', 'woocommerce_page_p9od', 'woocommerce_page_p9od-pickups' ), true ) ) {
 			wp_enqueue_style( 'p9od-admin', plugins_url( 'assets/admin.css', P9OD_FILE ), array( 'dashicons' ), P9OD_VERSION );
 			wp_enqueue_script( 'p9od-admin', plugins_url( 'assets/admin.js', P9OD_FILE ), array(), P9OD_VERSION, true );
 		}
 	}
 }
+

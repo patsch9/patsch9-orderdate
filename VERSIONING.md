@@ -8,4 +8,5 @@ Die gleiche, feste Ordnerstruktur `patsch9-orderdate/` ermöglicht WordPress, ei
 
 Es gibt kein WordPress.org-Deployment und keine automatische Update-Abfrage bei GitHub. Installiert wird das Release-ZIP über WordPress.
 
-Aktuelle Entwicklungsversion: `2026.11.1-beta2` mit Abholzeitfenstern.
+Aktuelle Entwicklungsversion: `2026.11.1-beta3` mit Abholzeitfenstern.
+

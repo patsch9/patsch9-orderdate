@@ -15,7 +15,7 @@
 - Warenkorbdatum, Bestell-/Positionsmeta `_p9od_pickup_date`: ISO-Datum. Sichtbare Beschriftung ist übersetzbar; Speicherung ist nicht von der Sprache abhängig.
 - Store-API-Namespace `patsch9-orderdate`, Checkout-Feld `date`. Beim API-Hinzufügen datierter Produkte ebenfalls `extensions["patsch9-orderdate"].date` senden. Die klassische Produktseite nutzt ein noncegeschütztes POST-Formular.
 
-Es werden keine eigenen Tabellen oder Cronjobs angelegt. Deaktivierung/Deinstallation löschen keine Bestelldaten.
+Es werden keine eigenen Tabellen angelegt. Der einmalige, in Batches aufgeteilte WP-Cron `p9od_index_orders` erschließt vorhandene Bestellungen für den Abholmanager. Deaktivierung/Deinstallation löschen keine Bestelldaten.
 
 ## Prüfstrategie
 
@@ -26,7 +26,7 @@ Die Produkt-Terminauswahl verwendet die klassischen WooCommerce-Produktseiten-Ho
 ## Geprüfter Stand am 02.11.2026
 
 - WordPress 7.1.4 / WooCommerce 11.2.1, lokal mit PHP 8.3 und MariaDB 10.11.
-- GitHub Actions: PHP 8.2, 8.3 und 8.4; 71 Terminregel-Assertions und vier JavaScript-Komponententests.
+- GitHub Actions: PHP 8.2, 8.3 und 8.4; 71 Terminregel-Assertions und fünf JavaScript-Komponententests.
 - 47 Integrations-Assertions jeweils mit klassischer Bestellspeicherung und HPOS.
 - Echter Chrome-Browser mit Storefront 4.6.2: Produktkalender, getrennte Datumswerte im Warenkorb, automatisches Mounten des Checkout Blocks, tatsächlicher Checkout-Store und klassischer Checkout.
 - Strikter WordPress Plugin Check des gebauten Pakets; feste Ordnerstruktur, Tag-Versionen und SHA-256-Prüfsummen geprüft.
@@ -52,3 +52,19 @@ Keine Aussage über tatsächlich getestete WordPress-Versionen aus Referenzplugi
 Warenkorb und Bestell-/Positionsmeta `_p9od_pickup_time` speichern die gewählte Spanne. Die Store API nimmt neben `date` auch `time` im Namespace `patsch9-orderdate` an; Cart-Daten liefern `time_required` und pro Datum eine Liste `windows`. Fehlerhafte, fehlende, abgelaufene oder nach Regeländerung unzulässige Werte verhindern den Abschluss. Wiederverwendete Bestellentwürfe entfernen veraltete gemeinsame Zeiten.
 
 Die lokale Integration und die Browserprüfung umfassen nun Datum plus Zeitfenster; insbesondere unterschiedliche Positionstermine, gemeinsame Teilintervalle, globale Vererbung, manipulierte Requests und E-Mail-Metadaten.
+
+
+## Abholablauf (2026.11.1-beta3)
+
+- `PickupLocations`: WooCommerce-Versandarten `local_pickup`/`pickup_location`; native `pickup_location`-/`pickup_address`-Snapshots.
+- `Gateway`/`GatewayBlocks`: offline Zahlung, beide Checkouts; serverseitiger Ausschluss gemischter Liefer-/Abholpakete. Gateway standardmäßig deaktiviert.
+- `PickupManager`: Status `wc-p9od-ready`/`wc-p9od-collected`, offene Übersicht, indexiertes CRUD-Meta `_p9od_managed`, Hintergrunderschließung älterer Bestellungen.
+- `_p9od_proposal`: Positions-ID, bisheriger und vorgeschlagener Termin, SHA-256 des kryptografischen Tokens und Ablaufzeit. Keine Klartexttokens im Bestellmeta. Ein Link ist maximal sieben Tage gültig; ungültige aktuelle Produktregeln verhindern ebenfalls die Annahme.
+- Mutationen im Manager erfordern Nonce, `manage_woocommerce`, bestellbezogene Bearbeitungsberechtigung, unveränderten Formularstand und eine verbindungsgestützte MySQL/MariaDB-Bestellsperre. Gastbestätigung prüft Token, Nonce, offenen Auftrag und unveränderte Ausgangsdaten. GET ändert nichts.
+- Statusprüfung vor Änderungen im Abholmanager, WooCommerce-Editor und REST API; eigene PHP-Integrationen müssen `PickupManager::assert_status()` vor dem Setzen eines Abholstatus aufrufen.
+- `PickupEmail`: registrierte WooCommerce-E-Mailtypen, HTML-/Text-Templates mit WooCommerce-Header, Bestellpositionen, Kundendaten und Footer; Theme-Overrides über die übliche Template-Auflösung. Versandfehler stehen in den Bestellnotizen, erneuter Vorschlagsversand ist im Manager möglich.
+- WooCommerce legt Zahlungseingänge weiterhin über `payment_complete()` an. Abholstatus allein setzt keine Zahlung. Beide neuen Status gehören nicht pauschal zur Liste bezahlter Status.
+
+Prüfung: `wp eval-file wp-content/plugins/patsch9-orderdate/tests/integration-pickups.php` in einer isolierten Installation. 47 Assertions je Bestellspeicherart: Zahlung und Bestände, echte Store-API-Zahlungsabwicklung, Orts-Snapshots, Umplanung und Tokenlebenszyklus, REST-Validierung, Abgrenzung normaler Bestellungen und Erstattungen, E-Mailauslösung und HTML-/Textinhalte. Test-E-Mails werden abgefangen. Die CI führt diese Prüfung zusätzlich zu den 47 vorhandenen Integrations-Assertions jeweils mit klassischem Bestellspeicher und HPOS aus.
+
+Zusätzliche lokale HTTP-Prüfung: 13 Assertions für Gast-GET ohne Mutation, ungültige Nonces, explizite Bestätigung, verbrauchte Links, Manager-Anmeldung, veraltete Formulare, Bereitstellung ohne Zahlung und Abholung mit ausdrücklich bestätigter Zahlung. Ein vollständiger visueller Browserlauf wurde für diese Erweiterung lokal nicht durchgeführt; die vorhandene Browser-CI bleibt aktiv.
