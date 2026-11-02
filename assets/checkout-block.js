@@ -53,12 +53,8 @@
     if (!dates.length) return el('p', { role: 'alert' }, __('Kein gemeinsamer Abholtermin verfügbar. Bitte die Artikelauswahl ändern oder getrennt bestellen.', 'patsch9-orderdate'));
     return el('div', { className: 'p9od-block p9od-field' },
       el('label', { htmlFor: 'p9od-block-date' }, __('Abholdatum', 'patsch9-orderdate') + ' *'),
-      el('input', { ref: input, id: 'p9od-block-date', type: 'text', value: date, required: true, autoComplete: 'off', placeholder: 'JJJJ-MM-TT',
+      el('input', { ref: input, id: 'p9od-block-date', type: 'text', value: date, required: true, autoComplete: 'off', placeholder: __('Abholdatum wählen', 'patsch9-orderdate'),
         onChange: function (event) { setDate(event.target.value); } }),
-      el('label', { htmlFor: 'p9od-block-date-list', className: 'screen-reader-text' }, __('Verfügbare Abholtermine', 'patsch9-orderdate')),
-      el('select', { id: 'p9od-block-date-list', value: date, onChange: function (event) { setDate(event.target.value); } },
-        el('option', { value: '' }, __('Bitte Abholdatum wählen', 'patsch9-orderdate')),
-        dates.map(function (entry) { return el('option', { key: entry.value, value: entry.value }, entry.label); })),
       timeRequired ? el('label', { htmlFor: 'p9od-block-time' }, __('Abholzeitfenster', 'patsch9-orderdate') + ' *') : null,
       timeRequired ? el('select', { id: 'p9od-block-time', required: true, value: time, disabled: !date,
         onChange: function (event) { setTime(event.target.value); } },
