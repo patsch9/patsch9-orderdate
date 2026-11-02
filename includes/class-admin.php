@@ -23,38 +23,45 @@ final class Admin {
 	public static function panel(): void {
 		global $product_object;
 		$rule = $product_object ? Plugin::raw_rule( $product_object->get_id() ) : Rules::defaults();
-		echo '<div id="p9od_rules" class="panel woocommerce_options_panel hidden"><div class="options_group">';
+		echo '<div id="p9od_rules" class="panel woocommerce_options_panel hidden">';
 		wp_nonce_field( 'p9od_save_product', 'p9od_admin_nonce' );
+
+		echo '<div class="options_group p9od-product-card"><h4>' . esc_html__( 'Abholung', 'patsch9-orderdate' ) . '</h4>';
 		woocommerce_wp_select( array( 'id' => 'p9od_mode', 'label' => __( 'Terminauswahl', 'patsch9-orderdate' ), 'value' => $rule['mode'], 'options' => array(
-			'off' => __( 'Deaktiviert', 'patsch9-orderdate' ), 'product' => __( 'Auf der Produktseite (je Position)', 'patsch9-orderdate' ), 'checkout' => __( 'An der Kasse (gemeinsamer Termin)', 'patsch9-orderdate' ),
+			'off' => __( 'Deaktiviert', 'patsch9-orderdate' ), 'product' => __( 'Auf der Produktseite', 'patsch9-orderdate' ), 'checkout' => __( 'An der Kasse', 'patsch9-orderdate' ),
 		) ) );
 		woocommerce_wp_select( array( 'id' => 'p9od_schedule', 'label' => __( 'Abholtage', 'patsch9-orderdate' ), 'value' => $rule['schedule'], 'options' => array(
-			'weekly' => __( 'Nur Wochentage', 'patsch9-orderdate' ), 'dates' => __( 'Nur Einzeltermine', 'patsch9-orderdate' ), 'combined' => __( 'Wochentage und zusätzliche Einzeltermine', 'patsch9-orderdate' ),
+			'weekly' => __( 'Wochentage', 'patsch9-orderdate' ), 'dates' => __( 'Einzeltermine', 'patsch9-orderdate' ), 'combined' => __( 'Wochentage + Einzeltermine', 'patsch9-orderdate' ),
 		) ) );
 		foreach ( array( 'from' => __( 'Verfügbar ab', 'patsch9-orderdate' ), 'until' => __( 'Verfügbar bis', 'patsch9-orderdate' ) ) as $key => $label ) {
 			woocommerce_wp_text_input( array( 'id' => 'p9od_' . $key, 'label' => $label, 'type' => 'date', 'value' => $rule[ $key ] ) );
 		}
 		global $wp_locale;
-		echo '<fieldset class="form-field p9od-weekdays"><legend>' . esc_html__( 'Wochentage', 'patsch9-orderdate' ) . '</legend>';
+		echo '<fieldset class="form-field p9od-weekdays"><legend>' . esc_html__( 'Wochentage', 'patsch9-orderdate' ) . '</legend><div class="p9od-weekday-options">';
 		for ( $day = 1; $day <= 7; ++$day ) {
-			echo '<label style="float:none;width:auto;margin:0 12px 0 0;display:inline-block"><input type="checkbox" name="p9od_weekdays[]" value="' . esc_attr( $day ) . '" ' . checked( in_array( $day, $rule['weekdays'], true ), true, false ) . '> ' . esc_html( $wp_locale->weekday[ $day % 7 ] ) . '</label>';
+			echo '<label><input type="checkbox" name="p9od_weekdays[]" value="' . esc_attr( $day ) . '" ' . checked( in_array( $day, $rule['weekdays'], true ), true, false ) . '> <span>' . esc_html( $wp_locale->weekday[ $day % 7 ] ) . '</span></label>';
 		}
-		echo '</fieldset>';
-		self::date_list( 'p9od_dates', __( 'Einzelne Abholtermine', 'patsch9-orderdate' ), $rule['dates'] );
+		echo '</div></fieldset>';
+		self::date_list( 'p9od_dates', __( 'Einzeltermine', 'patsch9-orderdate' ), $rule['dates'] );
 		self::date_list( 'p9od_blocked', __( 'Gesperrte Termine', 'patsch9-orderdate' ), $rule['blocked'] );
-		woocommerce_wp_select( array( 'id' => 'p9od_time_mode', 'label' => __( 'Abholzeitfenster', 'patsch9-orderdate' ), 'value' => $rule['time_mode'], 'options' => array(
-			'inherit' => __( 'Globale Zeitfenster übernehmen', 'patsch9-orderdate' ), 'custom' => __( 'Eigene Zeitfenster', 'patsch9-orderdate' ), 'off' => __( 'Nur Datum, ohne Zeitfenster', 'patsch9-orderdate' ),
+		echo '</div>';
+
+		echo '<div class="options_group p9od-product-card"><h4>' . esc_html__( 'Zeitfenster', 'patsch9-orderdate' ) . '</h4>';
+		woocommerce_wp_select( array( 'id' => 'p9od_time_mode', 'label' => __( 'Zeitfenster', 'patsch9-orderdate' ), 'value' => $rule['time_mode'], 'options' => array(
+			'inherit' => __( 'Globale übernehmen', 'patsch9-orderdate' ), 'custom' => __( 'Eigene Zeitfenster', 'patsch9-orderdate' ), 'off' => __( 'Ohne Zeitfenster', 'patsch9-orderdate' ),
 		) ) );
 		self::window_editor( 'p9od_time_windows', $rule['time_windows'] );
-		woocommerce_wp_text_input( array( 'id' => 'p9od_lead_days', 'label' => __( 'Vorlauf (Kalendertage)', 'patsch9-orderdate' ), 'type' => 'number', 'value' => $rule['lead_days'], 'custom_attributes' => array( 'min' => 0, 'max' => 730, 'step' => 1 ) ) );
-		woocommerce_wp_text_input( array( 'id' => 'p9od_cutoff', 'label' => __( 'Täglicher Bestellschluss', 'patsch9-orderdate' ), 'type' => 'time', 'value' => $rule['cutoff'], 'description' => __( 'Ab dieser Uhrzeit verschiebt sich der früheste Termin um einen Kalendertag. Es gilt die WordPress-Zeitzone.', 'patsch9-orderdate' ), 'desc_tip' => true ) );
-		echo '<p class="form-field">' . esc_html__( 'Varianten übernehmen die Regeln des Hauptprodukts. Sperrtage, Verfügbarkeitsgrenzen und Vorlauf gelten auch für Einzeltermine. Ohne gewählten Wochentag sind keine wiederkehrenden Termine verfügbar.', 'patsch9-orderdate' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="options_group p9od-product-card"><h4>' . esc_html__( 'Bestellregeln', 'patsch9-orderdate' ) . '</h4>';
+		woocommerce_wp_text_input( array( 'id' => 'p9od_lead_days', 'label' => __( 'Vorlauf', 'patsch9-orderdate' ), 'type' => 'number', 'value' => $rule['lead_days'], 'description' => __( 'Kalendertage', 'patsch9-orderdate' ), 'custom_attributes' => array( 'min' => 0, 'max' => 730, 'step' => 1 ) ) );
+		woocommerce_wp_text_input( array( 'id' => 'p9od_cutoff', 'label' => __( 'Bestellschluss', 'patsch9-orderdate' ), 'type' => 'time', 'value' => $rule['cutoff'], 'description' => __( 'Danach verschiebt sich der früheste Termin um einen Tag.', 'patsch9-orderdate' ), 'desc_tip' => true ) );
 		echo '</div></div>';
 	}
 
 	/** A native date picker appends ISO dates to an editable, accessible list. */
 	private static function date_list( string $id, string $label, array $dates ): void {
-		echo '<p class="form-field p9od-date-list"><label for="' . esc_attr( $id ) . '">' . esc_html( $label ) . '</label><textarea rows="4" id="' . esc_attr( $id ) . '" name="' . esc_attr( $id ) . '">' . esc_textarea( implode( "\n", $dates ) ) . '</textarea><span class="description">' . esc_html__( 'Je Zeile ein Datum im Format JJJJ-MM-TT. Zum Entfernen die betreffende Zeile löschen.', 'patsch9-orderdate' ) . '</span><span style="display:block"><input type="date" class="p9od-list-picker" aria-label="' . esc_attr( $label ) . '"> <button type="button" class="button p9od-list-add">' . esc_html__( 'Datum hinzufügen', 'patsch9-orderdate' ) . '</button></span></p>';
+		echo '<div class="form-field p9od-date-list"><label for="' . esc_attr( $id ) . '">' . esc_html( $label ) . '</label><div class="p9od-field-content"><textarea rows="4" id="' . esc_attr( $id ) . '" name="' . esc_attr( $id ) . '">' . esc_textarea( implode( "\n", $dates ) ) . '</textarea><span class="description">' . esc_html__( 'Ein Datum je Zeile.', 'patsch9-orderdate' ) . '</span><div class="p9od-field-actions"><input type="date" class="p9od-list-picker" aria-label="' . esc_attr( $label ) . '"> <button type="button" class="button p9od-list-add">' . esc_html__( 'Hinzufügen', 'patsch9-orderdate' ) . '</button></div></div></div>';
 	}
 
 	private static function window_editor( string $id, array $windows ): void {
@@ -64,12 +71,12 @@ final class Admin {
 				$rows[] = $day . ':' . $range;
 			}
 		}
-		echo '<p class="form-field p9od-window-list"><label for="' . esc_attr( $id ) . '">' . esc_html__( 'Zeitplan', 'patsch9-orderdate' ) . '</label><textarea rows="5" id="' . esc_attr( $id ) . '" name="' . esc_attr( $id ) . '">' . esc_textarea( implode( "\n", $rows ) ) . '</textarea><span class="description">' . esc_html__( 'Je Zeile z. B. *:13:00-14:00 (alle Tage) oder 7:12:00-13:00 (Sonntag). 1=Montag bis 7=Sonntag. Eigene Wochentage ersetzen „alle Tage“. Zeile löschen zum Entfernen. Keine Übernacht-Zeitfenster.', 'patsch9-orderdate' ) . '</span><span style="display:block"><select class="p9od-window-day" aria-label="' . esc_attr__( 'Wochentag des Zeitfensters', 'patsch9-orderdate' ) . '"><option value="*">' . esc_html__( 'Alle Tage', 'patsch9-orderdate' ) . '</option>';
+		echo '<div class="form-field p9od-window-list"><label for="' . esc_attr( $id ) . '">' . esc_html__( 'Eigene Zeitfenster', 'patsch9-orderdate' ) . '</label><div class="p9od-field-content"><textarea rows="5" id="' . esc_attr( $id ) . '" name="' . esc_attr( $id ) . '">' . esc_textarea( implode( "\n", $rows ) ) . '</textarea><span class="description">' . esc_html__( 'Ein Eintrag je Zeile. *=alle Tage, 1=Montag bis 7=Sonntag.', 'patsch9-orderdate' ) . '</span><div class="p9od-field-actions"><select class="p9od-window-day" aria-label="' . esc_attr__( 'Wochentag des Zeitfensters', 'patsch9-orderdate' ) . '"><option value="*">' . esc_html__( 'Alle Tage', 'patsch9-orderdate' ) . '</option>';
 		global $wp_locale;
 		for ( $day = 1; $day <= 7; ++$day ) {
 			echo '<option value="' . esc_attr( $day ) . '">' . esc_html( $wp_locale->weekday[ $day % 7 ] ) . '</option>';
 		}
-		echo '</select> <input type="time" class="p9od-window-start" aria-label="' . esc_attr__( 'Beginn des Zeitfensters', 'patsch9-orderdate' ) . '"> <input type="time" class="p9od-window-end" aria-label="' . esc_attr__( 'Ende des Zeitfensters', 'patsch9-orderdate' ) . '"> <button type="button" class="button p9od-window-add">' . esc_html__( 'Zeitfenster hinzufügen', 'patsch9-orderdate' ) . '</button></span></p>';
+		echo '</select> <input type="time" class="p9od-window-start" aria-label="' . esc_attr__( 'Beginn des Zeitfensters', 'patsch9-orderdate' ) . '"> <input type="time" class="p9od-window-end" aria-label="' . esc_attr__( 'Ende des Zeitfensters', 'patsch9-orderdate' ) . '"> <button type="button" class="button p9od-window-add">' . esc_html__( 'Hinzufügen', 'patsch9-orderdate' ) . '</button></div></div></div>';
 	}
 
 	/** Reads are only used after the corresponding nonce and capability checks. */
@@ -113,7 +120,7 @@ final class Admin {
 			return;
 		}
 		$settings = Plugin::settings();
-		echo '<div class="wrap woocommerce"><h1>' . esc_html__( 'Abholtermine', 'patsch9-orderdate' ) . '</h1><p>' . esc_html__( 'Aktiviere die Terminauswahl je Produkt unter Produktdaten → Abholtermine. Diese Einstellungen gelten für alle aktiven Produkte.', 'patsch9-orderdate' ) . '</p>';
+		echo '<div class="wrap woocommerce p9od-settings-page"><h1>' . esc_html__( 'Abholtermine', 'patsch9-orderdate' ) . '</h1>';
 		// A per-user transient avoids echoing untrusted query-string messages.
 		$notice = get_transient( 'p9od_notice_' . get_current_user_id() );
 		if ( $notice ) {
@@ -122,12 +129,16 @@ final class Admin {
 		}
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="p9od_settings">';
 		wp_nonce_field( 'p9od_settings', 'p9od_settings_nonce' );
-		echo '<p><label for="p9od_horizon">' . esc_html__( 'Maximal im Voraus buchbar (Kalendertage, 1–730)', 'patsch9-orderdate' ) . '</label> <input type="number" required min="1" max="730" name="p9od_horizon" id="p9od_horizon" value="' . esc_attr( $settings['horizon'] ) . '"></p>';
-		self::date_list( 'p9od_blocked', __( 'Globale Sperrtage / Betriebsferien', 'patsch9-orderdate' ), $settings['blocked'] );
+		echo '<div class="p9od-settings-grid">';
+		echo '<section class="p9od-settings-card"><h2>' . esc_html__( 'Allgemein', 'patsch9-orderdate' ) . '</h2><div class="p9od-setting-field"><label for="p9od_horizon">' . esc_html__( 'Maximal im Voraus', 'patsch9-orderdate' ) . '</label><div><input type="number" required min="1" max="730" name="p9od_horizon" id="p9od_horizon" value="' . esc_attr( $settings['horizon'] ) . '"> <span class="description">' . esc_html__( 'Kalendertage', 'patsch9-orderdate' ) . '</span></div></div></section>';
+		echo '<section class="p9od-settings-card"><h2>' . esc_html__( 'Sperrtage', 'patsch9-orderdate' ) . '</h2>';
+		self::date_list( 'p9od_blocked', __( 'Betriebsferien', 'patsch9-orderdate' ), $settings['blocked'] );
+		echo '</section>';
+		echo '<section class="p9od-settings-card"><h2>' . esc_html__( 'Globale Zeitfenster', 'patsch9-orderdate' ) . '</h2>';
 		self::window_editor( 'p9od_time_windows', $settings['time_windows'] );
-		echo '<p>' . esc_html__( 'Globale Zeitfenster gelten für Produkte mit „Globale Zeitfenster übernehmen“. Eine leere globale Liste lässt die reine Datumsauswahl bestehen. Bereits begonnene Zeitfenster am heutigen Tag sind nicht buchbar.', 'patsch9-orderdate' ) . '</p>';
+		echo '</section></div>';
 		submit_button();
-		echo '</form><p>' . esc_html__( 'Die Terminauswahl ersetzt keine Versandart. Konfiguriere Abholung separat in WooCommerce. Termin-Kapazitäten und mehrere Abholorte sind nicht enthalten.', 'patsch9-orderdate' ) . '</p></div>';
+		echo '<p class="description p9od-settings-note">' . esc_html__( 'Versandart „Abholung“ separat in WooCommerce konfigurieren.', 'patsch9-orderdate' ) . '</p></form></div>';
 	}
 
 	public static function save_settings(): void {
