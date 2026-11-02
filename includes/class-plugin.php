@@ -293,11 +293,13 @@ final class Plugin {
 
 	/** Snapshot the common date on the order and its affected positions. */
 	public static function apply_order_date( \WC_Order $order, string $date, string $window = '' ): void {
+		$rules = self::checkout_rules();
+		$requires_time = Rules::requires_time( $rules );
 		$order->delete_meta_data( self::DATE );
 		$order->delete_meta_data( self::TIME );
-		if ( self::checkout_rules() ) {
+		if ( $rules ) {
 			$order->update_meta_data( self::DATE, $date );
-			if ( Rules::requires_time( self::checkout_rules() ) ) {
+			if ( $requires_time ) {
 				$order->update_meta_data( self::TIME, $window );
 			}
 		}
@@ -306,7 +308,7 @@ final class Plugin {
 			if ( 'checkout' === $rule['mode'] ) {
 				$item->update_meta_data( self::DATE, $date );
 				$item->delete_meta_data( self::TIME );
-				if ( Rules::requires_time( self::checkout_rules() ) ) {
+				if ( $requires_time ) {
 					$item->update_meta_data( self::TIME, $window );
 				}
 			} elseif ( 'off' === $rule['mode'] ) {
@@ -339,12 +341,9 @@ final class Plugin {
 		if ( ! $date ) {
 			return $formatted;
 		}
-		foreach ( $formatted as $meta ) {
-			if ( self::DATE === $meta->key ) {
-				return $formatted;
-			}
+		if ( ! array_filter( $formatted, static fn( $meta ) => self::DATE === $meta->key ) ) {
+			$formatted['p9od'] = (object) array( 'key' => self::DATE, 'value' => $date, 'display_key' => self::label(), 'display_value' => esc_html( self::display( $date ) ) );
 		}
-		$formatted['p9od'] = (object) array( 'key' => self::DATE, 'value' => $date, 'display_key' => self::label(), 'display_value' => esc_html( self::display( $date ) ) );
 		$window = (string) $item->get_meta( self::TIME, true );
 		if ( $window && ! array_filter( $formatted, static fn( $meta ) => self::TIME === $meta->key ) ) {
 			$formatted['p9od_time'] = (object) array( 'key' => self::TIME, 'value' => $window, 'display_key' => self::time_label(), 'display_value' => esc_html( self::display_time( $window ) ) );
