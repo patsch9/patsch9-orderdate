@@ -9,6 +9,7 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 update_option( 'woocommerce_currency', 'EUR' );
 update_option( 'woocommerce_default_country', 'DE' );
 update_option( 'woocommerce_enable_guest_checkout', 'yes' );
+update_option( 'woocommerce_coming_soon', 'no' );
 WC_Install::create_pages();
 $date = current_datetime()->modify( '+2 days' )->format( 'Y-m-d' );
 $ids = array();

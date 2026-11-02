@@ -148,6 +148,9 @@ try {
 	$once = Blocks::insert_block( $block );
 	$twice = Blocks::insert_block( $once );
 	p9od_assert( 1 === count( $twice['innerBlocks'] ), 'Block is inserted exactly once' );
+	$actions = parse_blocks( '<!-- wp:woocommerce/checkout-fields-block --><div><!-- wp:woocommerce/checkout-actions-block /--></div><!-- /wp:woocommerce/checkout-fields-block -->' )[0];
+	$ordered = Blocks::insert_block( $actions );
+	p9od_assert( Blocks::NS . '/pickup-date' === $ordered['innerBlocks'][0]['blockName'], 'Injected date field precedes checkout actions' );
 	p9od_assert( str_contains( render_block( $twice ), 'data-block-name="patsch9-orderdate/pickup-date"' ), 'Server-rendered checkout includes block mount point' );
 	WP_CLI::success( $GLOBALS['p9od_test_checks'] . ' integration assertions passed (' . get_bloginfo( 'version' ) . ' / WC ' . WC_VERSION . ').' );
 } finally {

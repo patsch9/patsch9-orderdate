@@ -23,6 +23,16 @@ Reine Regeln decken ungültige Datumswerte, Schaltjahre, Sommerzeit, Grenzen, Vo
 
 Die Produkt-Terminauswahl verwendet die klassischen WooCommerce-Produktseiten-Hooks. Direkte Kaufwege ohne Datum werden abgewiesen. Unterstützte Varianten erben die Regeln des Hauptprodukts. Nicht unterstützte Produkttypen werden wie deaktivierte Produkte behandelt.
 
+## Geprüfter Stand am 02.11.2026
+
+- WordPress 7.1.4 / WooCommerce 11.2.1, lokal mit PHP 8.3 und MariaDB 10.11.
+- GitHub Actions: PHP 8.2, 8.3 und 8.4; 48 Terminregel-Assertions und drei JavaScript-Komponententests.
+- 27 Integrations-Assertions jeweils mit klassischer Bestellspeicherung und HPOS.
+- Echter Chrome-Browser mit Storefront 4.6.2: Produktkalender, getrennte Datumswerte im Warenkorb, automatisches Mounten des Checkout Blocks, tatsächlicher Checkout-Store und klassischer Checkout.
+- Strikter WordPress Plugin Check des gebauten Pakets; feste Ordnerstruktur, Tag-Versionen und SHA-256-Prüfsummen geprüft.
+
+Die Browserprüfung validiert Auswahl und Datenübergabe. Zahlungsanbieter-spezifische Abläufe und das Theme des Zielshops bleiben Teil des manuellen Shop-Abgleichs.
+
 ## Manueller Shop-Abgleich vor einem produktiven Release
 
 1. Produktmodus mit einfacher und variabler Ware testen; dasselbe Produkt mit zwei Daten hinzufügen.
