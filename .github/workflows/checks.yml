@@ -1,0 +1,97 @@
+name: Quality checks
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  syntax-and-rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3', '8.4']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: none
+      - name: PHP syntax and rule regressions
+        run: |
+          find . -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+          php tests/test-rules.php
+      - name: JavaScript syntax and checkout regressions
+        if: matrix.php == '8.2'
+        run: |
+          find assets -name '*.js' -print0 | xargs -0 -n1 node --check
+          node --test tests/*.test.cjs
+      - name: Build package and verify consistent metadata
+        if: matrix.php == '8.2'
+        run: |
+          python3 tools/build-release.py 2026.11.1-beta1
+          python3 tests/test-package.py dist/patsch9-orderdate-2026.11.1-beta1.zip
+
+  wordpress-plugin-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: python3 tools/build-release.py 2026.11.1-beta1
+      - name: Check actual installable package
+        uses: WordPress/plugin-check-action@10857da14b6c2246d15402b3e69f777edcf8c12e # v1
+        with:
+          build-dir: dist/package/patsch9-orderdate
+          strict: true
+
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-wp-env-11.16.0
+      - run: npm -g --no-fund --prefer-offline install @wordpress/env@11.16.0
+      - name: Disposable WooCommerce environment
+        run: |
+          python3 - <<'PY'
+          import json, os
+          with open('.wp-env.json', 'w') as file:
+              json.dump({'core': None, 'testsEnvironment': False, 'mappings': {'wp-content/plugins/patsch9-orderdate': os.getcwd()}}, file)
+          PY
+          wp-env start
+          wp-env run cli wp plugin install woocommerce --activate
+          wp-env run cli wp plugin activate patsch9-orderdate
+      - name: Test classic order storage
+        run: |
+          wp-env run cli wp option update woocommerce_custom_orders_table_enabled no
+          wp-env run cli wp eval-file wp-content/plugins/patsch9-orderdate/tests/integration.php
+      - name: Test HPOS order storage
+        run: |
+          wp-env run cli wp option update woocommerce_custom_orders_table_enabled yes
+          wp-env run cli wp eval-file wp-content/plugins/patsch9-orderdate/tests/integration.php
+      - name: Stop disposable environment
+        if: always()
+        run: wp-env destroy

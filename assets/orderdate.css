@@ -1,0 +1,14 @@
+.p9od-field { margin: 1rem 0; }
+.p9od-field label { display: block; margin-bottom: .4rem; font-weight: 600; }
+.p9od-field input, .p9od-field select { width: 100%; min-height: 44px; padding: .6rem; box-sizing: border-box; }
+.p9od-block select { margin-top: .5rem; }
+#ui-datepicker-div.p9od-datepicker { background: #fff; color: #202020; border: 1px solid #aaa; padding: .8rem; border-radius: 4px; box-shadow: 0 4px 16px #0003; z-index: 100000 !important; width: min(22rem, 92vw); }
+#ui-datepicker-div.p9od-datepicker .ui-datepicker-header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; }
+#ui-datepicker-div.p9od-datepicker .ui-datepicker-title { order: -1; width: 100%; text-align: center; font-weight: bold; }
+#ui-datepicker-div.p9od-datepicker table { width: 100%; border-collapse: collapse; margin: .5rem 0 0; }
+#ui-datepicker-div.p9od-datepicker td, #ui-datepicker-div.p9od-datepicker th { text-align: center; padding: .2rem; border: 0; }
+#ui-datepicker-div.p9od-datepicker td a, #ui-datepicker-div.p9od-datepicker td span { display: block; padding: .4rem; }
+#ui-datepicker-div.p9od-datepicker .ui-state-disabled { opacity: .35; }
+#ui-datepicker-div.p9od-datepicker .ui-state-active { background: #1e4670; color: #fff; }
+#ui-datepicker-div.p9od-datepicker a { cursor: pointer; color: #1e4670; }
+#ui-datepicker-div.p9od-datepicker a:focus-visible { outline: 2px solid #1e4670; }
