@@ -27,6 +27,7 @@
         showAnim: '', duration: 0,
         beforeShowDay: function (date) { return [allowed.has($.datepicker.formatDate('yy-mm-dd', date)), '']; },
         beforeShow: function () { $('#ui-datepicker-div').addClass('p9od-datepicker'); },
+        onClose: function () { $('#ui-datepicker-div').removeClass('p9od-datepicker'); },
         onSelect: function (date) { input[0].setCustomValidity(''); $(select).val(date).trigger('change'); }
       });
       input.datepicker(options).on('change', function () {
