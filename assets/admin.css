@@ -195,7 +195,6 @@
 
 .p9od-setting-field,
 .p9od-settings-card .form-field {
-	dis: block;
 	display: grid;
 	grid-template-columns: 210px minmax(0, 1fr);
 	column-gap: 16px;
