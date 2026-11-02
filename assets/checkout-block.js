@@ -34,6 +34,7 @@
         prevText: window.p9odCalendar.previous, nextText: window.p9odCalendar.next,
         showAnim: '', duration: 0,
         beforeShow: function () { $('#ui-datepicker-div').addClass('p9od-datepicker'); },
+        onClose: function () { $('#ui-datepicker-div').removeClass('p9od-datepicker'); },
         beforeShowDay: function (day) { return [allowed.has($.datepicker.formatDate('yy-mm-dd', day)), '']; },
         onSelect: setDate
       }));
