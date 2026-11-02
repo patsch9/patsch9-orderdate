@@ -12,14 +12,20 @@ update_option( 'woocommerce_enable_guest_checkout', 'yes' );
 update_option( 'woocommerce_coming_soon', 'no' );
 WC_Install::create_pages();
 $date = current_datetime()->modify( '+2 days' )->format( 'Y-m-d' );
+update_option( 'p9od_settings', array( 'horizon' => 30, 'blocked' => array(), 'time_windows' => array( '*' => array( '13:00-15:00' ) ) ) );
 $ids = array();
-foreach ( array( 'product', 'checkout' ) as $mode ) {
+foreach ( array( 'product', 'checkout', 'checkout_other' ) as $mode ) {
 	$product = new WC_Product_Simple();
 	$product->set_name( 'Orderdate browser fixture ' . $mode );
 	$product->set_regular_price( '0' );
 	$product->set_virtual( true );
 	$product->set_status( 'publish' );
-	$product->update_meta_data( Plugin::META, Rules::normalize( array( 'mode' => $mode, 'schedule' => 'dates', 'dates' => array( $date ) ), wp_timezone() ) );
+	$rule = array( 'mode' => 'product' === $mode ? 'product' : 'checkout', 'schedule' => 'dates', 'dates' => array( $date ) );
+	if ( 'checkout' === $mode ) {
+		$rule['time_mode'] = 'custom';
+		$rule['time_windows'] = array( '*' => array( '14:00-16:00' ) );
+	}
+	$product->update_meta_data( Plugin::META, Rules::normalize( $rule, wp_timezone() ) );
 	$product->save();
 	$ids[ $mode ] = $product->get_id();
 }

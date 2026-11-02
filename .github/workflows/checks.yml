@@ -42,8 +42,8 @@ jobs:
       - name: Build package and verify consistent metadata
         if: matrix.php == '8.2'
         run: |
-          python3 tools/build-release.py 2026.11.1-beta1
-          python3 tests/test-package.py dist/patsch9-orderdate-2026.11.1-beta1.zip
+          python3 tools/build-release.py 2026.11.1-beta2
+          python3 tests/test-package.py dist/patsch9-orderdate-2026.11.1-beta2.zip
       - name: Store installable preview package
         if: matrix.php == '8.2' && github.event_name != 'push'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -62,7 +62,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - run: python3 tools/build-release.py 2026.11.1-beta1
+      - run: python3 tools/build-release.py 2026.11.1-beta2
       - name: Check actual installable package
         uses: WordPress/plugin-check-action@10857da14b6c2246d15402b3e69f777edcf8c12e # v1
         with:

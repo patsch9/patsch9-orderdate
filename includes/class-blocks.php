@@ -76,17 +76,22 @@ final class Blocks {
 				$dates = Plugin::dates( $rules );
 				return array(
 					'required' => (bool) $rules,
-					'dates' => array_map( static fn( $date ) => array( 'value' => $date, 'label' => Plugin::display( $date ) ), $dates ),
+					'time_required' => Rules::requires_time( $rules ),
+					'dates' => array_map( static fn( $date ) => array( 'value' => $date, 'label' => Plugin::display( $date ), 'windows' => Plugin::windows( $date, $rules ) ), $dates ),
 				);
 			},
 			'schema_callback' => static fn() => array(
 				'required' => array( 'type' => 'boolean', 'readonly' => true ),
-				'dates' => array( 'type' => 'array', 'readonly' => true, 'items' => array( 'type' => 'object', 'properties' => array( 'value' => array( 'type' => 'string' ), 'label' => array( 'type' => 'string' ) ) ) ),
+				'time_required' => array( 'type' => 'boolean', 'readonly' => true ),
+				'dates' => array( 'type' => 'array', 'readonly' => true, 'items' => array( 'type' => 'object', 'properties' => array( 'value' => array( 'type' => 'string' ), 'label' => array( 'type' => 'string' ), 'windows' => array( 'type' => 'array', 'items' => array( 'type' => 'string' ) ) ) ) ),
 			), 'schema_type' => ARRAY_A,
 		) );
 		woocommerce_store_api_register_endpoint_data( array(
 			'endpoint' => CheckoutSchema::IDENTIFIER, 'namespace' => self::NS,
-			'schema_callback' => static fn() => array( 'date' => array( 'type' => 'string', 'maxLength' => 10, 'context' => array( 'view', 'edit' ) ) ),
+			'schema_callback' => static fn() => array(
+				'date' => array( 'type' => 'string', 'maxLength' => 10, 'context' => array( 'view', 'edit' ) ),
+				'time' => array( 'type' => 'string', 'maxLength' => 11, 'context' => array( 'view', 'edit' ) ),
+			),
 			'schema_type' => ARRAY_A,
 		) );
 	}
@@ -97,10 +102,14 @@ final class Blocks {
 		if ( 'product' === $rule['mode'] ) {
 			$extensions = $request->get_param( 'extensions' );
 			$date = is_array( $extensions ) ? ( $extensions[ self::NS ]['date'] ?? '' ) : '';
-			if ( ! Plugin::allowed( $date, $rule ) ) {
-				throw new RouteException( 'p9od_invalid_date', esc_html__( 'Bitte auf der Produktseite ein gültiges Abholdatum auswählen.', 'patsch9-orderdate' ), 400 );
+			$window = is_array( $extensions ) ? ( $extensions[ self::NS ]['time'] ?? '' ) : '';
+			if ( ! Plugin::selection_allowed( $date, $window, array( $rule ) ) ) {
+				throw new RouteException( 'p9od_invalid_date', esc_html__( 'Bitte auf der Produktseite ein gültiges Abholdatum und gegebenenfalls ein Zeitfenster auswählen.', 'patsch9-orderdate' ), 400 );
 			}
 			$data['cart_item_data'][ Plugin::DATE ] = $date;
+			if ( Rules::requires_time( array( $rule ) ) ) {
+				$data['cart_item_data'][ Plugin::TIME ] = $window;
+			}
 		}
 		if ( 'checkout' === $rule['mode'] && ! Plugin::dates( array( $rule ) ) ) {
 			throw new RouteException( 'p9od_no_date', esc_html__( 'Für diesen Artikel ist derzeit kein Abholdatum verfügbar.', 'patsch9-orderdate' ), 400 );
@@ -111,12 +120,13 @@ final class Blocks {
 	public static function checkout( \WC_Order $order, \WP_REST_Request $request ): void {
 		$extensions = $request->get_param( 'extensions' );
 		$date = is_array( $extensions ) ? ( $extensions[ self::NS ]['date'] ?? '' ) : '';
-		$errors = Plugin::errors( $date, true );
+		$window = is_array( $extensions ) ? ( $extensions[ self::NS ]['time'] ?? '' ) : '';
+		$errors = Plugin::errors( $date, true, $window );
 		if ( $errors ) {
 			throw new RouteException( 'p9od_invalid_date', esc_html( implode( ' ', $errors ) ), 400 );
 		}
 		// Draft orders are reused. Clear obsolete dates after cart/mode changes.
-		Plugin::apply_order_date( $order, is_string( $date ) ? $date : '' );
+		Plugin::apply_order_date( $order, is_string( $date ) ? $date : '', is_string( $window ) ? $window : '' );
 		$order->save();
 	}
 }

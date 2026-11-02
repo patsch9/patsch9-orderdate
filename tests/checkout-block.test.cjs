@@ -10,9 +10,10 @@ function harness() {
   const effects = [];
   const refs = [];
   let cursor, scheduled = [], dirty = false, component, tree;
-  let props = { extensions: {}, checkoutExtensionData: { setExtensionData: (_ns, _key, value) => { api.value = value; } } };
-  const api = { error: null, value: null, tree: null };
-  const validation = { setValidationErrors: (errors) => { api.error = errors.p9od_date; }, clearValidationError: () => { api.error = null; } };
+  let props = { extensions: {}, checkoutExtensionData: { setExtensionData: (_ns, key, value) => { api[key === 'date' ? 'value' : 'time'] = value; } } };
+  const api = { errors: {}, value: null, tree: null };
+  Object.defineProperty(api, 'error', { get: () => Object.values(api.errors)[0] || null });
+  const validation = { setValidationErrors: (errors) => { Object.assign(api.errors, errors); }, clearValidationError: (key) => { delete api.errors[key]; } };
   const element = {
     createElement: (type, attributes, ...children) => ({ type, props: attributes || {}, children }),
     useState: (initial) => {
@@ -45,12 +46,16 @@ function harness() {
     } while (dirty);
     api.tree = tree;
   }
-  api.update = (required, dates) => {
-    props = { ...props, extensions: { 'patsch9-orderdate': { required, dates: dates.map((value) => ({ value, label: value })) } } };
+  api.update = (required, dates, timeRequired = false, windows = {}) => {
+    props = { ...props, extensions: { 'patsch9-orderdate': { required, time_required: timeRequired, dates: dates.map((value) => ({ value, label: value, windows: windows[value] || [] })) } } };
     render();
   };
   api.choose = (date) => {
     tree.children.find((child) => child && child.type === 'select').props.onChange({ target: { value: date } });
+    render();
+  };
+  api.chooseTime = (time) => {
+    tree.children.find((child) => child && child.props.id === 'p9od-block-time').props.onChange({ target: { value: time } });
     render();
   };
   render();
@@ -90,4 +95,23 @@ test('no common date is visible and prevents an empty checkout', () => {
   ui.update(true, []);
   assert.equal(ui.tree.props.role, 'alert');
   assert.ok(ui.error);
+});
+
+test('time is explicit, validated and discarded after availability changes', () => {
+  const ui = harness();
+  ui.update(true, ['2026-11-13'], true, { '2026-11-13': ['13:00-14:00', '14:00-15:00'] });
+  ui.choose('2026-11-13');
+  assert.ok(ui.errors.p9od_time);
+  ui.chooseTime('13:00-14:00');
+  assert.equal(ui.error, null);
+  assert.equal(ui.time, '13:00-14:00');
+  ui.chooseTime('12:00-13:00');
+  assert.ok(ui.errors.p9od_time, 'Tampered time is not accepted');
+  ui.chooseTime('13:00-14:00');
+  ui.update(true, ['2026-11-13'], true, { '2026-11-13': ['14:00-15:00'] });
+  assert.equal(ui.time, '');
+  assert.ok(ui.errors.p9od_time);
+  ui.update(false, []);
+  assert.equal(ui.error, null);
+  assert.equal(ui.time, '');
 });

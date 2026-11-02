@@ -123,6 +123,66 @@ try {
 	$request->set_param( 'extensions', array() );
 	Blocks::checkout( $order, $request );
 	p9od_assert( '' === wc_get_order( $order->get_id() )->get_meta( Plugin::DATE, true ), 'Draft retry clears obsolete order date' );
+	// Global defaults apply to existing products without rewriting their metadata.
+	update_option( 'p9od_settings', array( 'horizon' => 30, 'blocked' => array(), 'time_windows' => array( '*' => array( '13:00-15:00', '15:00-16:00' ) ) ) );
+	p9od_assert( 'custom' === Plugin::rule( $product->get_id() )['time_mode'] && 'inherit' === Plugin::raw_rule( $product->get_id() )['time_mode'], 'Global schedule resolves without changing saved inheritance' );
+	$_POST = array( 'p9od_nonce' => wp_create_nonce( 'p9od_add_date' ), 'p9od_date' => $first );
+	p9od_assert( ! Plugin::validate_add( true, $product->get_id(), 1 ), 'Product time cannot be omitted' );
+	$_POST['p9od_time'] = '13:00-15:00';
+	p9od_assert( Plugin::validate_add( true, $product->get_id(), 1 ), 'Product date and time accepted' );
+	$early = WC()->cart->add_to_cart( $product->get_id(), 1 );
+	$_POST['p9od_time'] = '15:00-16:00';
+	$late = WC()->cart->add_to_cart( $product->get_id(), 1 );
+	p9od_assert( $early !== $late, 'Same product and date with distinct windows remain separate lines' );
+	$timed_checkout = p9od_fixture( 'checkout', array( 'time_mode' => 'custom', 'time_windows' => array( '*' => array( '14:00-16:00' ) ) ) );
+	WC()->cart->add_to_cart( $timed_checkout->get_id(), 1 );
+	WC()->cart->add_to_cart( $checkout->get_id(), 1 );
+	p9od_assert( array( '14:00-15:00', '15:00-16:00' ) === Plugin::windows( $first, Plugin::checkout_rules() ), 'Checkout intersects differently configured windows' );
+	p9od_assert( (bool) Plugin::errors( $first, true ) && (bool) Plugin::errors( $first, true, '13:00-15:00' ), 'Missing and forged common windows are rejected' );
+	p9od_assert( ! Plugin::errors( $first, true, '14:00-15:00' ), 'Valid common interval is accepted even when not a literal product window' );
+	$_POST['p9od_checkout_date'] = $first;
+	$_POST['p9od_checkout_time'] = '14:00-15:00';
+	$timed_order = wc_create_order();
+	$orders[] = $timed_order->get_id();
+	WC()->checkout()->create_order_line_items( $timed_order, WC()->cart );
+	Plugin::create_order( $timed_order, array() );
+	$timed_order->save();
+	$timed_loaded = wc_get_order( $timed_order->get_id() );
+	p9od_assert( '14:00-15:00' === $timed_loaded->get_meta( Plugin::TIME, true ), 'Common window survives order CRUD reload' );
+	$times = array();
+	foreach ( $timed_loaded->get_items() as $timed_item ) {
+		$times[] = $timed_item->get_meta( Plugin::TIME, true );
+		p9od_assert( isset( $timed_item->get_formatted_meta_data()['p9od_time'] ), 'Item windows appear in standard order and email tables' );
+	}
+	p9od_assert( array( '13:00-15:00', '15:00-16:00', '14:00-15:00', '14:00-15:00' ) === $times, 'Mixed cart preserves position windows and common window' );
+	p9od_assert( isset( Plugin::email_date( array(), false, $timed_loaded )['p9od_time'] ), 'Common window appears in email metadata' );
+	$time_request = new WP_REST_Request( 'POST' );
+	$time_request->set_param( 'extensions', array( Blocks::NS => array( 'date' => $first, 'time' => '14:00-15:00' ) ) );
+	Blocks::checkout( $timed_order, $time_request );
+	p9od_assert( '14:00-15:00' === wc_get_order( $timed_order->get_id() )->get_meta( Plugin::TIME, true ), 'Store API checkout persists a valid window' );
+	$time_request->set_param( 'extensions', array( Blocks::NS => array( 'date' => $first, 'time' => array( '14:00-15:00' ) ) ) );
+	try {
+		Blocks::checkout( $timed_order, $time_request );
+		p9od_assert( false, 'Malformed Store API time accepted' );
+	} catch ( \Automattic\WooCommerce\StoreApi\Exceptions\RouteException $exception ) {
+		p9od_assert( true, 'Malformed Store API time rejected' );
+	}
+	WC()->cart->empty_cart();
+	$time_request->set_param( 'extensions', array() );
+	Blocks::checkout( $timed_order, $time_request );
+	p9od_assert( '' === wc_get_order( $timed_order->get_id() )->get_meta( Plugin::TIME, true ), 'Draft retry clears obsolete order window' );
+	wc_clear_notices();
+	$_POST = array();
+	$missing_time = p9od_rest( 'cart/add-item', array( 'id' => $product->get_id(), 'quantity' => 1, 'extensions' => array( Blocks::NS => array( 'date' => $first ) ) ) );
+	p9od_assert( $missing_time->get_status() >= 400, 'Real Store API cannot omit a required product window' );
+	$with_time = p9od_rest( 'cart/add-item', array( 'id' => $product->get_id(), 'quantity' => 1, 'extensions' => array( Blocks::NS => array( 'date' => $first, 'time' => '13:00-15:00' ) ) ) );
+	p9od_assert( in_array( $with_time->get_status(), array( 200, 201 ), true ), 'Real Store API accepts valid date and window' );
+	$changed = Plugin::settings();
+	$changed['time_windows'] = array( '*' => array( '15:00-16:00' ) );
+	update_option( 'p9od_settings', $changed );
+	p9od_assert( (bool) Plugin::errors(), 'Changed schedule invalidates a stale cart window' );
+	WC()->cart->empty_cart();
+	update_option( 'p9od_settings', array( 'horizon' => 30, 'blocked' => array() ) );
 	$before = $product->get_meta( Plugin::META, true );
 	wp_set_current_user( 0 );
 	$_POST = array( 'p9od_admin_nonce' => wp_create_nonce( 'p9od_save_product' ), 'p9od_mode' => 'off' );
