@@ -1,5 +1,14 @@
 (function ($) {
   'use strict';
+  function updateWindows(select) {
+    const dateField = document.querySelector('select[name="' + select.dataset.dateField + '"]');
+    const schedule = JSON.parse(select.dataset.windows);
+    const selected = select.value;
+    const windows = dateField ? (schedule[dateField.value] || []) : [];
+    select.replaceChildren(new Option(select.options[0].textContent, ''));
+    windows.forEach(function (window) { select.add(new Option(window.replace('-', '–'), window)); });
+    select.value = windows.includes(selected) ? selected : '';
+  }
   function enhance() {
     $('select.p9od-date:not([data-enhanced])').each(function () {
       const select = this;
@@ -23,9 +32,14 @@
       input.datepicker(options).on('change', function () {
         select.value = allowed.has(input.val()) ? input.val() : '';
         this.setCustomValidity(select.value ? '' : window.p9odCalendar.choose);
+        $(select).trigger('change');
       });
     });
+    $('select.p9od-time').each(function () { updateWindows(this); });
   }
+  $(document.body).on('change', 'select.p9od-date', function () {
+    $('select.p9od-time').each(function () { updateWindows(this); });
+  });
   $(enhance);
   $(document.body).on('updated_checkout', enhance);
 }(jQuery));

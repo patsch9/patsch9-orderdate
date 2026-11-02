@@ -69,4 +69,31 @@ foreach ( array(
 ) as $values ) {
 	rejects( $values );
 }
+$timed = Rules::normalize( array( 'time_mode' => 'custom', 'weekdays' => range( 1, 7 ), 'time_windows' => array( '*' => array( '13:00-15:00', '15:00-16:00' ), 7 => array( '12:00-13:00' ) ) ), $zone );
+expect( array( '13:00-15:00', '15:00-16:00' ) === Rules::windows( '2026-11-02', array( $timed ), $now ), 'Two same-day windows before their start' );
+expect( array( '15:00-16:00' ) === Rules::windows( '2026-11-02', array( $timed ), $now->setTime( 13, 0 ) ), 'Already started windows are excluded at their start' );
+expect( array() === Rules::windows( '2026-11-02', array( $timed ), $now->setTime( 16, 0 ) ), 'Expired day has no windows' );
+expect( array( '12:00-13:00' ) === Rules::windows( '2026-11-08', array( $timed ), $now ), 'Sunday override replaces all-days schedule' );
+$other = $timed;
+$other['time_windows'] = array( '*' => array( '14:00-15:30' ) );
+expect( array( '14:00-15:00', '15:00-15:30' ) === Rules::windows( '2026-11-03', array( $timed, $other ), $now ), 'Intersect time intervals across checkout products' );
+expect( Rules::windows( '2026-11-03', array( $timed ), $now ) === Rules::windows( '2026-11-03', array( $timed, $daily ), $now ), 'Date-only products do not constrain windows' );
+$other['time_windows'] = array( '*' => array( '16:00-17:00' ) );
+expect( array() === Rules::available( array( $timed, $other ), $now, 5 ), 'Touching but non-overlapping intervals do not offer a date' );
+expect( array() === Rules::windows( array(), array( $timed ), $now ), 'Malformed date rejected for time availability' );
+expect( array() === Rules::available( array( array_merge( $timed, array( 'time_windows' => array() ) ) ), $now, 5 ), 'Custom empty schedule closes all dates' );
+expect( Rules::parse_windows( "*:13:00-14:00\n7:12:00-13:00" ) === array( '*' => array( '13:00-14:00' ), 7 => array( '12:00-13:00' ) ), 'Admin schedule parser' );
+foreach ( array( '24:00-25:00', '13:00-13:00', '15:00-13:00', '23:00-01:00', '9:00-10:00', '<script>' ) as $range ) {
+	rejects( array( 'time_windows' => array( '*' => array( $range ) ) ) );
+}
+rejects( array( 'time_windows' => array( '*' => array( '13:00-15:00', '14:00-16:00' ) ) ) );
+rejects( array( 'time_windows' => array( 8 => array( '13:00-14:00' ) ) ) );
+rejects( array( 'time_windows' => '13:00-14:00' ) );
+rejects( array( 'time_mode' => 'arbitrary' ) );
+rejects( array( 'time_windows' => array( '*' => array_fill( 0, 65, '13:00-14:00' ) ) ) );
+$dst_rule = $timed;
+$dst_rule['time_windows'] = array( '*' => array( '12:00-13:00' ) );
+expect( array( '12:00-13:00' ) === Rules::windows( '2027-03-28', array( $dst_rule ), $dst ), 'Windows use local wall-clock time over DST change' );
+$dst_rule['time_windows'] = array( '*' => array( '02:30-03:30' ) );
+expect( array() === Rules::windows( '2027-03-28', array( $dst_rule ), $dst ), 'Nonexistent DST local times are excluded' );
 echo "$checks rule assertions passed.\n";

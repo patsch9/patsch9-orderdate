@@ -3,7 +3,7 @@
  * Plugin Name: Patsch9 Orderdate for WooCommerce
  * Plugin URI: https://github.com/patsch9/patsch9-orderdate
  * Description: Produktbezogene Abholtermine mit Wochentagen, Einzelterminen und Auswahl am Produkt oder an der Kasse.
- * Version: 2026.11.1-beta1
+ * Version: 2026.11.1-beta2
  * Requires at least: 6.9.5
  * Requires PHP: 8.2
  * Requires Plugins: woocommerce
@@ -19,7 +19,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'P9OD_VERSION', '2026.11.1-beta1' );
+define( 'P9OD_VERSION', '2026.11.1-beta2' );
 define( 'P9OD_FILE', __FILE__ );
 
 add_action( 'before_woocommerce_init', static function () {

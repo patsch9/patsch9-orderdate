@@ -7,3 +7,5 @@ Der Tag ist die autoritative Paketversion. Die Build-Routine setzt Plugin-Header
 Die gleiche, feste Ordnerstruktur `patsch9-orderdate/` ermöglicht WordPress, ein hochgeladenes Release als Update zu erkennen. GitHub-Quellcodearchive können branchabhängige Ordnernamen enthalten und sind dafür nicht vorgesehen.
 
 Es gibt kein WordPress.org-Deployment und keine automatische Update-Abfrage bei GitHub. Installiert wird das Release-ZIP über WordPress.
+
+Aktuelle Entwicklungsversion: `2026.11.1-beta2` mit Abholzeitfenstern.

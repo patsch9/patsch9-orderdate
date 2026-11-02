@@ -5,7 +5,7 @@ Requires at least: 6.9.5
 Tested up to: 7.1
 Requires PHP: 8.2
 Requires Plugins: woocommerce
-Stable tag: 2026.11.1-beta1
+Stable tag: 2026.11.1-beta2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,6 +20,8 @@ Patsch9 Orderdate adds product-specific collection dates to WooCommerce. Configu
 * Global and product-specific blackout dates.
 * Preparation time in calendar days and a daily order cutoff.
 * A bounded advance booking window.
+* Global or product-specific pickup time windows with weekday overrides.
+* Shared overlapping windows at checkout, with started same-day windows excluded.
 * Calendar with unavailable days disabled and an alternative date list.
 * Current rules are validated on the server when an order is placed.
 * Pickup dates appear in the cart, orders, administration and emails.
@@ -29,7 +31,7 @@ Supports simple and variable products. Variations inherit the parent product rul
 
 Use classic product pages for product-level date selection. Product Add-to-Cart Blocks, the new product editor and express checkout integrations do not include a dedicated product date selector. Purchase requests without a required date are rejected.
 
-No time slots, appointment capacity, multiple pickup locations, automatic public holidays or shipping method are included. Date selection applies to enabled products independently of the shipping method; configure pickup shipping separately in WooCommerce.
+No appointment capacity, multiple pickup locations, automatic public holidays or shipping method are included. Date selection applies to enabled products independently of the shipping method; configure pickup shipping separately in WooCommerce.
 
 No external services, telemetry or CDN assets. Dates are stored locally with WooCommerce orders and follow their retention and privacy processes. Uninstallation preserves configuration and historical order dates.
 
@@ -66,10 +68,18 @@ No. Date selection applies independently of shipping methods. Configure local pi
 
 == Changelog ==
 
+= 2026.11.1-beta2 =
+* Add optional pickup time windows with global defaults, per-product and weekday overrides.
+* Intersect checkout windows and validate date/time selections server-side.
+* Store windows in cart lines, orders and emails; preserve date-only configurations.
+
 = 2026.11.1-beta1 =
 * Initial development version: product and checkout pickup dates, calendar rules, HPOS and Checkout Block integration.
 
 == Upgrade Notice ==
+
+= 2026.11.1-beta2 =
+Existing products inherit global windows when configured. An empty global schedule preserves date-only selection. Test with your checkout and payment methods.
 
 = 2026.11.1-beta1 =
 First prerelease. Test with your theme, checkout and payment methods before production use.

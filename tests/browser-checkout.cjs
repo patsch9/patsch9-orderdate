@@ -16,10 +16,14 @@ const base = process.env.P9OD_TEST_URL || 'http://localhost:8888';
     await input.waitFor();
     await input.fill(fixtures.date);
     await input.dispatchEvent('change');
+    await page.locator('#p9od_time').selectOption('13:00-15:00');
     await Promise.all([page.waitForLoadState('networkidle'), page.locator('button.single_add_to_cart_button').click()]);
     assert.equal(await page.locator('.woocommerce-error').count(), 0);
     // Standard WooCommerce POST product form also adds checkout-mode products.
     await page.goto(`${base}/?p=${fixtures.checkout}`);
+    await page.locator('button.single_add_to_cart_button').click();
+    await page.waitForLoadState('networkidle');
+    await page.goto(`${base}/?p=${fixtures.checkout_other}`);
     await page.locator('button.single_add_to_cart_button').click();
     await page.waitForLoadState('networkidle');
     await page.goto(`${base}/?page_id=${fixtures.checkout_page}`);
@@ -31,6 +35,11 @@ const base = process.env.P9OD_TEST_URL || 'http://localhost:8888';
     assert.equal(await page.locator('#p9od-block-date').inputValue(), fixtures.date);
     const apiDate = await page.evaluate(() => window.wp.data.select('wc/store/checkout').getExtensionData()['patsch9-orderdate'].date);
     assert.equal(apiDate, fixtures.date, 'Selection reaches the actual WooCommerce checkout store');
+    const timeOptions = await page.locator('#p9od-block-time option').evaluateAll((nodes) => nodes.map((node) => node.value));
+    assert.deepEqual(timeOptions, ['', '14:00-15:00'], 'Only the common overlapping time window is offered');
+    await page.locator('#p9od-block-time').selectOption('14:00-15:00');
+    const apiTime = await page.evaluate(() => window.wp.data.select('wc/store/checkout').getExtensionData()['patsch9-orderdate'].time);
+    assert.equal(apiTime, '14:00-15:00', 'Window reaches the actual WooCommerce checkout store');
     const fieldBeforeButton = await page.locator('#p9od-block-date').evaluate((field) => {
       const button = document.querySelector('.wc-block-components-checkout-place-order-button');
       return button && !!(field.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING);
@@ -41,6 +50,8 @@ const base = process.env.P9OD_TEST_URL || 'http://localhost:8888';
     await page.locator('input#p9od_checkout_date').fill(fixtures.date);
     await page.locator('input#p9od_checkout_date').dispatchEvent('change');
     assert.equal(await page.locator('select[name=p9od_checkout_date]').inputValue(), fixtures.date, 'Classic calendar updates submitted select value');
+    await page.locator('#p9od_checkout_time').selectOption('14:00-15:00');
+    assert.equal(await page.locator('#p9od_checkout_time').inputValue(), '14:00-15:00');
     assert.deepEqual(errors, [], 'No uncaught frontend exceptions');
     console.log('Product, classic checkout and Checkout Block browser assertions passed.');
   } catch (error) {

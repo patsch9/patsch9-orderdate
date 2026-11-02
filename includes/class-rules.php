@@ -24,13 +24,14 @@ final class Rules {
 			'mode' => 'off', 'schedule' => 'weekly', 'from' => '', 'until' => '',
 			'weekdays' => array( 1, 2, 3, 4, 5, 6, 7 ), 'dates' => array(),
 			'blocked' => array(), 'lead_days' => 0, 'cutoff' => '',
+			'time_mode' => 'inherit', 'time_windows' => array(),
 		);
 	}
 
 	/** Validate every configuration value; preserve the old configuration on error. */
 	public static function normalize( array $input, DateTimeZone $zone ): array {
 		$result = self::defaults();
-		foreach ( array( 'mode' => array( 'off', 'product', 'checkout' ), 'schedule' => array( 'weekly', 'dates', 'combined' ) ) as $key => $allowed ) {
+		foreach ( array( 'mode' => array( 'off', 'product', 'checkout' ), 'schedule' => array( 'weekly', 'dates', 'combined' ), 'time_mode' => array( 'inherit', 'custom', 'off' ) ) as $key => $allowed ) {
 			$value = $input[ $key ] ?? $result[ $key ];
 			if ( ! in_array( $value, $allowed, true ) ) {
 				throw new \InvalidArgumentException( 'Ungültiger Auswahlmodus.' );
@@ -75,7 +76,114 @@ final class Rules {
 			throw new \InvalidArgumentException( 'Ungültiger Bestellschluss (HH:MM erforderlich).' );
 		}
 		$result['cutoff'] = $cutoff;
+		$result['time_windows'] = self::normalize_windows( $input['time_windows'] ?? array() );
 		return $result;
+	}
+
+	/** Parse editable schedules; the admin's native time inputs generate these rows. */
+	public static function parse_windows( string $text ): array {
+		$windows = array();
+		foreach ( preg_split( '/\R/', trim( $text ) ) as $row ) {
+			if ( '' === trim( $row ) ) {
+				continue;
+			}
+			if ( ! preg_match( '/^\s*([1-7*])\s*:\s*(\d{2}:\d{2}-\d{2}:\d{2})\s*$/D', $row, $match ) ) {
+				throw new \InvalidArgumentException( 'Zeitfenster im Format *:13:00-14:00 oder 1:13:00-14:00 (1=Montag, 7=Sonntag) eingeben.' );
+			}
+			$windows[ $match[1] ][] = $match[2];
+		}
+		return self::normalize_windows( $windows );
+	}
+
+	/** Reject malformed, overnight and overlapping windows instead of silently changing them. */
+	public static function normalize_windows( mixed $windows ): array {
+		if ( ! is_array( $windows ) || count( $windows ) > 8 ) {
+			throw new \InvalidArgumentException( 'Ungültige Zeitfenster.' );
+		}
+		$result = array();
+		$count = 0;
+		foreach ( $windows as $day => $ranges ) {
+			if ( ! in_array( (string) $day, array( '*', '1', '2', '3', '4', '5', '6', '7' ), true ) || ! is_array( $ranges ) ) {
+				throw new \InvalidArgumentException( 'Ungültiger Wochentag für Zeitfenster.' );
+			}
+			$count += count( $ranges );
+			if ( $count > 64 ) {
+				throw new \InvalidArgumentException( 'Höchstens 64 Zeitfenster je Zeitplan erlaubt.' );
+			}
+			foreach ( $ranges as $range ) {
+				if ( ! is_string( $range ) || ! preg_match( '/^(?:[01]\d|2[0-3]):[0-5]\d-(?:[01]\d|2[0-3]):[0-5]\d$/D', $range ) || substr( $range, 0, 5 ) >= substr( $range, 6 ) ) {
+					throw new \InvalidArgumentException( 'Zeitfenster benötigen einen Beginn vor dem Ende am selben Tag (HH:MM-HH:MM).' );
+				}
+			}
+			$ranges = array_values( array_unique( $ranges ) );
+			sort( $ranges );
+			$last_end = '';
+			foreach ( $ranges as $range ) {
+				if ( substr( $range, 0, 5 ) < $last_end ) {
+					throw new \InvalidArgumentException( 'Zeitfenster desselben Wochentags dürfen sich nicht überschneiden.' );
+				}
+				$last_end = substr( $range, 6 );
+			}
+			$result[ $day ] = $ranges;
+		}
+		return $result;
+	}
+
+	public static function requires_time( array $rules ): bool {
+		foreach ( $rules as $rule ) {
+			if ( 'custom' === ( $rule['time_mode'] ?? 'off' ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** Intersect intervals rather than requiring identical window labels on products. */
+	public static function windows( mixed $date, array $rules, DateTimeImmutable $now ): array {
+		$day = self::date( $date, $now->getTimezone() );
+		if ( ! $day || $date < $now->format( 'Y-m-d' ) ) {
+			return array();
+		}
+		$common = null;
+		foreach ( $rules as $rule ) {
+			if ( 'custom' !== ( $rule['time_mode'] ?? 'off' ) ) {
+				continue;
+			}
+			$weekday = $day->format( 'N' );
+			$windows = $rule['time_windows'];
+			$ranges = $windows[ $weekday ] ?? $windows['*'] ?? array();
+			if ( null === $common ) {
+				$common = $ranges;
+				continue;
+			}
+			$intersection = array();
+			foreach ( $common as $left ) {
+				foreach ( $ranges as $right ) {
+					$start = max( substr( $left, 0, 5 ), substr( $right, 0, 5 ) );
+					$end = min( substr( $left, 6 ), substr( $right, 6 ) );
+					if ( $start < $end ) {
+						$intersection[] = $start . '-' . $end;
+					}
+				}
+			}
+			$common = array_values( array_unique( $intersection ) );
+		}
+		$common = $common ?? array();
+		// Reject local times that do not exist during the spring DST transition.
+		$common = array_values( array_filter( $common, static function ( $range ) use ( $date, $now ) {
+			foreach ( array( substr( $range, 0, 5 ), substr( $range, 6 ) ) as $time ) {
+				$local = DateTimeImmutable::createFromFormat( '!Y-m-d H:i', $date . ' ' . $time, $now->getTimezone() );
+				if ( ! $local || $local->format( 'Y-m-d H:i' ) !== $date . ' ' . $time ) {
+					return false;
+				}
+			}
+			return true;
+		} ) );
+		if ( $date === $now->format( 'Y-m-d' ) ) {
+			$common = array_values( array_filter( $common, static fn( $range ) => substr( $range, 0, 5 ) > $now->format( 'H:i' ) ) );
+		}
+		sort( $common );
+		return $common;
 	}
 
 	/** Availability is checked again at checkout against the current shop time. */
@@ -122,7 +230,7 @@ final class Rules {
 					break;
 				}
 			}
-			if ( $allowed ) {
+			if ( $allowed && ( ! self::requires_time( $rules ) || self::windows( $value, $rules, $now ) ) ) {
 				$dates[] = $value;
 			}
 			$day = $day->modify( '+1 day' );
