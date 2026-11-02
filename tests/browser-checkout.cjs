@@ -27,12 +27,13 @@ const base = process.env.P9OD_TEST_URL || 'http://localhost:8888';
     await page.locator('button.single_add_to_cart_button').click();
     await page.waitForLoadState('networkidle');
     await page.goto(`${base}/?page_id=${fixtures.checkout_page}`);
-    await page.locator('#p9od-block-date').waitFor();
-    assert.equal(await page.locator('#p9od-block-date').count(), 1, 'Injected block mounts exactly once');
-    const options = await page.locator('#p9od-block-date-list option').evaluateAll((nodes) => nodes.map((node) => node.value));
-    assert.deepEqual(options, ['', fixtures.date], 'Block exposes only eligible dates');
-    await page.locator('#p9od-block-date-list').selectOption(fixtures.date);
-    assert.equal(await page.locator('#p9od-block-date').inputValue(), fixtures.date);
+    const blockDate = page.locator('#p9od-block-date');
+    await blockDate.waitFor();
+    assert.equal(await blockDate.count(), 1, 'Injected block mounts exactly once');
+    assert.equal(await page.locator('#p9od-block-date-list').count(), 0, 'Checkout Block exposes only one date control');
+    await blockDate.fill(fixtures.date);
+    await blockDate.dispatchEvent('change');
+    assert.equal(await blockDate.inputValue(), fixtures.date);
     const apiDate = await page.evaluate(() => window.wp.data.select('wc/store/checkout').getExtensionData()['patsch9-orderdate'].date);
     assert.equal(apiDate, fixtures.date, 'Selection reaches the actual WooCommerce checkout store');
     const timeOptions = await page.locator('#p9od-block-time option').evaluateAll((nodes) => nodes.map((node) => node.value));
@@ -40,7 +41,7 @@ const base = process.env.P9OD_TEST_URL || 'http://localhost:8888';
     await page.locator('#p9od-block-time').selectOption('14:00-15:00');
     const apiTime = await page.evaluate(() => window.wp.data.select('wc/store/checkout').getExtensionData()['patsch9-orderdate'].time);
     assert.equal(apiTime, '14:00-15:00', 'Window reaches the actual WooCommerce checkout store');
-    const fieldBeforeButton = await page.locator('#p9od-block-date').evaluate((field) => {
+    const fieldBeforeButton = await blockDate.evaluate((field) => {
       const button = document.querySelector('.wc-block-components-checkout-place-order-button');
       return button && !!(field.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING);
     });

@@ -51,7 +51,7 @@ function harness() {
     render();
   };
   api.choose = (date) => {
-    tree.children.find((child) => child && child.type === 'select').props.onChange({ target: { value: date } });
+    tree.children.find((child) => child && child.props.id === 'p9od-block-date').props.onChange({ target: { value: date } });
     render();
   };
   api.chooseTime = (time) => {

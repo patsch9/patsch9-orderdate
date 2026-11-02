@@ -155,6 +155,7 @@ final class Admin {
 	public static function assets(): void {
 		$screen = get_current_screen();
 		if ( $screen && ( 'product' === $screen->id || 'woocommerce_page_p9od' === $screen->id ) ) {
+			wp_enqueue_style( 'p9od-admin', plugins_url( 'assets/admin.css', P9OD_FILE ), array( 'dashicons' ), P9OD_VERSION );
 			wp_enqueue_script( 'p9od-admin', plugins_url( 'assets/admin.js', P9OD_FILE ), array(), P9OD_VERSION, true );
 		}
 	}
