@@ -1,0 +1,15 @@
+/.git/
+/.github/
+/.gitignore
+/.distignore
+/README.md
+/CHANGELOG.md
+/DOCUMENTATION.md
+/RESEARCH.md
+/SECURITY.md
+/VERSIONING.md
+/tests/
+/tools/
+/node_modules/
+/dist/
+*.zip

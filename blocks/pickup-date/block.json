@@ -1,0 +1,14 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "patsch9-orderdate/pickup-date",
+  "version": "2026.11.1-beta1",
+  "title": "Abholdatum",
+  "category": "woocommerce",
+  "description": "Gemeinsames Abholdatum für Artikel mit Terminauswahl an der Kasse.",
+  "textdomain": "patsch9-orderdate",
+  "parent": ["woocommerce/checkout-fields-block"],
+  "supports": {"html": false, "multiple": false, "reusable": false},
+  "editorScript": "p9od-block-editor",
+  "viewScript": "p9od-block"
+}

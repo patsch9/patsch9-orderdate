@@ -1,0 +1,6 @@
+/dist/
+/.release-build/
+/node_modules/
+/.wp-env.json
+*.zip
+*.zip.sha256
