@@ -24,6 +24,7 @@
       const options = Object.assign({}, window.p9odCalendar, {
         dateFormat: 'yy-mm-dd', minDate: dates[0], maxDate: dates[dates.length - 1],
         prevText: window.p9odCalendar.previous, nextText: window.p9odCalendar.next,
+        showAnim: '', duration: 0,
         beforeShowDay: function (date) { return [allowed.has($.datepicker.formatDate('yy-mm-dd', date)), '']; },
         beforeShow: function () { $('#ui-datepicker-div').addClass('p9od-datepicker'); },
         onClose: function () { $('#ui-datepicker-div').removeClass('p9od-datepicker'); },

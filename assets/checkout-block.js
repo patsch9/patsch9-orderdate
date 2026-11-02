@@ -32,6 +32,7 @@
       field.datepicker(Object.assign({}, window.p9odCalendar, {
         dateFormat: 'yy-mm-dd', minDate: dates[0].value, maxDate: dates[dates.length - 1].value,
         prevText: window.p9odCalendar.previous, nextText: window.p9odCalendar.next,
+        showAnim: '', duration: 0,
         beforeShow: function () { $('#ui-datepicker-div').addClass('p9od-datepicker'); },
         onClose: function () { $('#ui-datepicker-div').removeClass('p9od-datepicker'); },
         beforeShowDay: function (day) { return [allowed.has($.datepicker.formatDate('yy-mm-dd', day)), '']; },
@@ -50,7 +51,7 @@
       return function () { store.clearValidationError('p9od_date'); store.clearValidationError('p9od_time'); };
     }, [required, date, signature, timeRequired, time, windowSignature]);
     if (!required) return null;
-    if (!dates.length) return el('p', { role: 'alert' }, __('Kein gemeinsamer Abholtermin verfügbar. Bitte die Artikelauswahl ändern oder getrennt bestellen.', 'patsch9-orderdate'));
+    if (!dates.length) return el('p', { role: 'alert' }, __('Kein gemeinsamer Abholtermin verfügbar.', 'patsch9-orderdate'));
     return el('div', { className: 'p9od-block p9od-field' },
       el('label', { htmlFor: 'p9od-block-date' }, __('Abholdatum', 'patsch9-orderdate') + ' *'),
       el('input', { ref: input, id: 'p9od-block-date', type: 'text', value: date, required: true, autoComplete: 'off', placeholder: __('Abholdatum wählen', 'patsch9-orderdate'),
@@ -59,8 +60,7 @@
       timeRequired ? el('select', { id: 'p9od-block-time', required: true, value: time, disabled: !date,
         onChange: function (event) { setTime(event.target.value); } },
         el('option', { value: '' }, __('Bitte Zeitfenster wählen', 'patsch9-orderdate')),
-        windows.map(function (window) { return el('option', { key: window, value: window }, window.replace('-', '–')); })) : null,
-      el('p', null, __('Gilt für Artikel mit Terminauswahl an der Kasse. Bereits am Produkt gewählte Termine bleiben separat bestehen.', 'patsch9-orderdate')));
+        windows.map(function (window) { return el('option', { key: window, value: window }, window.replace('-', '–')); })) : null);
   }
   window.wc.blocksCheckout.registerCheckoutBlock({
     metadata: { apiVersion: 3, name: ns + '/pickup-date', parent: ['woocommerce/checkout-fields-block'] }, component: PickupDate

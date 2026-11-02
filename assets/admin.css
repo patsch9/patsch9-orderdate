@@ -7,104 +7,143 @@
 	line-height: 1;
 }
 
-#p9od_rules .p9od-weekdays {
+/* Product editor: same card language as Patsch9 Rental Engine. */
+#p9od_rules {
 	box-sizing: border-box;
-	margin: 0;
-	padding: 12px 20px !important;
-	min-height: 42px;
+	padding: 14px;
+	background: #f6f7f7;
 }
 
-#p9od_rules .p9od-weekdays legend {
-	float: left;
+#p9od_rules .p9od-product-card {
 	box-sizing: border-box;
-	width: 150px;
-	margin: 2px 12px 0 0;
-	padding: 0;
-	font-weight: 600;
+	margin: 0 0 14px;
+	padding: 14px 0;
+	border: 1px solid #dcdcde;
+	border-radius: 10px;
+	background: #fff;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, .03);
 }
 
-#p9od_rules .p9od-weekdays > label {
-	float: none !important;
-	display: inline-flex !important;
-	align-items: center;
-	gap: 5px;
-	width: auto !important;
-	margin: 0 16px 8px 0 !important;
+#p9od_rules .p9od-product-card:last-child {
+	margin-bottom: 0;
+}
+
+#p9od_rules .p9od-product-card > h4 {
+	margin: 0 14px 10px !important;
 	padding: 0 !important;
-	white-space: nowrap;
+	font-size: 14px;
+	line-height: 1.4;
 }
 
-#p9od_rules .p9od-weekdays input[type="checkbox"] {
-	margin: 0;
-}
-
-#p9od_rules .p9od-date-list,
-#p9od_rules .p9od-window-list,
-body.woocommerce_page_p9od .p9od-date-list,
-body.woocommerce_page_p9od .p9od-window-list {
+#p9od_rules .form-field {
 	display: grid;
-	grid-template-columns: 150px minmax(0, 1fr);
-	column-gap: 12px;
-	row-gap: 8px;
+	grid-template-columns: 170px minmax(0, 1fr);
+	column-gap: 14px;
+	row-gap: 6px;
+	align-items: start;
 	box-sizing: border-box;
-	margin: 0;
-	padding: 12px 20px !important;
+	width: 100%;
+	margin: 0 !important;
+	padding: 8px 14px !important;
 }
 
-body.woocommerce_page_p9od .p9od-date-list,
-body.woocommerce_page_p9od .p9od-window-list {
-	max-width: 980px;
-	padding-right: 0 !important;
-	padding-left: 0 !important;
-}
-
-#p9od_rules .p9od-date-list > label,
-#p9od_rules .p9od-window-list > label,
-body.woocommerce_page_p9od .p9od-date-list > label,
-body.woocommerce_page_p9od .p9od-window-list > label {
+#p9od_rules .form-field > label,
+#p9od_rules .form-field > legend {
 	float: none !important;
 	box-sizing: border-box;
+	grid-column: 1;
 	width: auto !important;
-	margin: 2px 0 0 !important;
+	margin: 5px 0 0 !important;
 	padding: 0 !important;
 	font-weight: 600;
+	line-height: 1.4;
 }
 
-#p9od_rules .p9od-date-list > textarea,
-#p9od_rules .p9od-window-list > textarea,
-#p9od_rules .p9od-date-list > .description,
-#p9od_rules .p9od-window-list > .description,
-#p9od_rules .p9od-date-list > span:last-child,
-#p9od_rules .p9od-window-list > span:last-child,
-body.woocommerce_page_p9od .p9od-date-list > textarea,
-body.woocommerce_page_p9od .p9od-window-list > textarea,
-body.woocommerce_page_p9od .p9od-date-list > .description,
-body.woocommerce_page_p9od .p9od-window-list > .description,
-body.woocommerce_page_p9od .p9od-date-list > span:last-child,
-body.woocommerce_page_p9od .p9od-window-list > span:last-child {
+#p9od_rules .form-field > input,
+#p9od_rules .form-field > select,
+#p9od_rules .form-field > textarea,
+#p9od_rules .form-field > .p9od-field-content,
+#p9od_rules .form-field > .p9od-weekday-options,
+#p9od_rules .form-field > .description {
+	float: none !important;
 	grid-column: 2;
 	box-sizing: border-box;
-	width: 100% !important;
-	max-width: 620px;
 	margin: 0 !important;
 }
 
-#p9od_rules .p9od-date-list > textarea,
-#p9od_rules .p9od-window-list > textarea,
-body.woocommerce_page_p9od .p9od-date-list > textarea,
-body.woocommerce_page_p9od .p9od-window-list > textarea {
+#p9od_rules .form-field > input.short,
+#p9od_rules .form-field > select.short {
+	width: 100% !important;
+	max-width: 420px;
+}
+
+#p9od_rules .form-field > input[type="date"] {
+	max-width: 220px;
+}
+
+#p9od_rules .form-field > input[type="time"] {
+	max-width: 180px;
+}
+
+#p9od_rules .form-field > input[type="number"] {
+	max-width: 140px;
+}
+
+#p9od_rules .p9od-weekday-options {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 16px;
+	min-height: 30px;
+	padding-top: 4px;
+}
+
+#p9od_rules .p9od-weekday-options label {
+	display: inline-flex !important;
+	align-items: center;
+	gap: 6px;
+	width: auto !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	white-space: nowrap;
+	font-weight: 400;
+}
+
+#p9od_rules .p9od-weekday-options input[type="checkbox"] {
+	width: 16px;
+	height: 16px;
+	margin: 0 !important;
+}
+
+.p9od-field-content {
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
+	width: 100%;
+	max-width: 680px;
+	min-width: 0;
+}
+
+.p9od-field-content textarea {
+	box-sizing: border-box;
+	width: 100% !important;
 	min-height: 92px;
+	margin: 0 !important;
 	resize: vertical;
 }
 
-#p9od_rules .p9od-date-list > span:last-child,
-#p9od_rules .p9od-window-list > span:last-child,
-body.woocommerce_page_p9od .p9od-date-list > span:last-child,
-body.woocommerce_page_p9od .p9od-window-list > span:last-child {
-	display: flex !important;
+.p9od-field-content > .description {
+	margin: 0 !important;
+	color: #646970;
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+.p9od-field-actions {
+	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 8px;
+	margin-top: 1px;
 }
 
 .p9od-list-picker,
@@ -117,13 +156,11 @@ body.woocommerce_page_p9od .p9od-window-list > span:last-child {
 }
 
 .p9od-list-picker {
-	width: auto !important;
-	min-width: 170px;
+	width: 180px !important;
 }
 
 .p9od-window-day {
-	width: auto !important;
-	min-width: 150px;
+	width: 160px !important;
 }
 
 .p9od-window-start,
@@ -131,58 +168,99 @@ body.woocommerce_page_p9od .p9od-window-list > span:last-child {
 	width: 128px !important;
 }
 
-body.woocommerce_page_p9od .wrap.woocommerce > form {
-	max-width: 980px;
+/* WooCommerce settings submenu. */
+.p9od-settings-page form {
+	max-width: 1040px;
 }
 
-body.woocommerce_page_p9od .wrap.woocommerce > form > p:first-of-type > label {
-	display: block;
-	margin-bottom: 6px;
+.p9od-settings-grid {
+	display: grid;
+	gap: 16px;
+	margin-top: 18px;
+}
+
+.p9od-settings-card {
+	box-sizing: border-box;
+	padding: 18px;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	background: #fff;
+}
+
+.p9od-settings-card h2 {
+	margin: 0 0 16px;
+	padding: 0;
+	font-size: 16px;
+}
+
+.p9od-setting-field,
+.p9od-settings-card .form-field {
+	display: grid;
+	grid-template-columns: 210px minmax(0, 1fr);
+	column-gap: 16px;
+	row-gap: 6px;
+	align-items: start;
+	margin: 0;
+	padding: 0;
+}
+
+.p9od-setting-field > label,
+.p9od-settings-card .form-field > label {
+	margin: 5px 0 0;
 	font-weight: 600;
 }
 
-body.woocommerce_page_p9od #p9od_horizon {
-	width: 140px;
+.p9od-settings-card .p9od-field-content {
+	max-width: 680px;
+}
+
+.p9od-settings-page #p9od_horizon {
+	width: 110px;
+}
+
+.p9od-settings-page .submit {
+	margin-bottom: 6px;
+}
+
+.p9od-settings-note {
+	margin-top: 0;
 }
 
 @media screen and (max-width: 782px) {
-	#p9od_rules .p9od-weekdays legend {
-		float: none;
-		width: 100%;
-		margin: 0 0 10px;
+	#p9od_rules {
+		padding: 10px;
 	}
 
-	#p9od_rules .p9od-date-list,
-	#p9od_rules .p9od-window-list,
-	body.woocommerce_page_p9od .p9od-date-list,
-	body.woocommerce_page_p9od .p9od-window-list {
+	#p9od_rules .form-field,
+	.p9od-setting-field,
+	.p9od-settings-card .form-field {
 		grid-template-columns: minmax(0, 1fr);
-		padding-right: 12px !important;
-		padding-left: 12px !important;
 	}
 
-	body.woocommerce_page_p9od .p9od-date-list,
-	body.woocommerce_page_p9od .p9od-window-list {
-		padding-right: 0 !important;
-		padding-left: 0 !important;
-	}
-
-	#p9od_rules .p9od-date-list > textarea,
-	#p9od_rules .p9od-window-list > textarea,
-	#p9od_rules .p9od-date-list > .description,
-	#p9od_rules .p9od-window-list > .description,
-	#p9od_rules .p9od-date-list > span:last-child,
-	#p9od_rules .p9od-window-list > span:last-child,
-	body.woocommerce_page_p9od .p9od-date-list > textarea,
-	body.woocommerce_page_p9od .p9od-window-list > textarea,
-	body.woocommerce_page_p9od .p9od-date-list > .description,
-	body.woocommerce_page_p9od .p9od-window-list > .description,
-	body.woocommerce_page_p9od .p9od-date-list > span:last-child,
-	body.woocommerce_page_p9od .p9od-window-list > span:last-child {
+	#p9od_rules .form-field > label,
+	#p9od_rules .form-field > legend,
+	#p9od_rules .form-field > input,
+	#p9od_rules .form-field > select,
+	#p9od_rules .form-field > textarea,
+	#p9od_rules .form-field > .p9od-field-content,
+	#p9od_rules .form-field > .p9od-weekday-options,
+	#p9od_rules .form-field > .description {
 		grid-column: 1;
-		max-width: none;
 	}
 
+	#p9od_rules .form-field > label,
+	#p9od_rules .form-field > legend,
+	.p9od-setting-field > label,
+	.p9od-settings-card .form-field > label {
+		margin-top: 0 !important;
+	}
+
+	#p9od_rules .form-field > input.short,
+	#p9od_rules .form-field > select.short,
+	#p9od_rules .form-field > input[type="date"],
+	#p9od_rules .form-field > input[type="time"],
+	#p9od_rules .form-field > input[type="number"],
+	.p9od-field-content,
 	.p9od-list-picker,
 	.p9od-window-day,
 	.p9od-window-start,
@@ -190,6 +268,16 @@ body.woocommerce_page_p9od #p9od_horizon {
 	.p9od-list-add,
 	.p9od-window-add {
 		width: 100% !important;
+		max-width: none;
+	}
+
+	.p9od-field-actions {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.p9od-settings-card {
+		padding: 14px;
 	}
 }
 
