@@ -4,6 +4,11 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      upload-preview:
+        description: Store the preview ZIP (requires available Actions storage)
+        type: boolean
+        default: false
   workflow_call:
 
 permissions:
@@ -44,8 +49,9 @@ jobs:
         run: |
           python3 tools/build-release.py 2026.11.1-beta3
           python3 tests/test-package.py dist/patsch9-orderdate-2026.11.1-beta3.zip
+          python3 -m unittest discover -s tests -p 'test_plugin_report.py'
       - name: Store installable preview package
-        if: matrix.php == '8.2' && github.event_name != 'push'
+        if: matrix.php == '8.2' && github.event_name == 'workflow_dispatch' && inputs.upload-preview
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: patsch9-orderdate-preview
@@ -54,20 +60,6 @@ jobs:
             dist/*.zip.sha256
           if-no-files-found: error
           retention-days: 7
-
-  wordpress-plugin-check:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - run: python3 tools/build-release.py 2026.11.1-beta3
-      - name: Check actual installable package
-        uses: WordPress/plugin-check-action@10857da14b6c2246d15402b3e69f777edcf8c12e # v1
-        with:
-          build-dir: dist/package/patsch9-orderdate
-          strict: true
 
   integration:
     runs-on: ubuntu-latest
@@ -94,6 +86,15 @@ jobs:
           wp-env start
           wp-env run cli wp plugin install woocommerce --activate
           wp-env run cli wp plugin activate patsch9-orderdate
+      - name: Strict Plugin Check of installable package
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/build-release.py 2026.11.1-beta3
+          wp-env run cli wp plugin install plugin-check --activate
+          wp-env run cli wp plugin check wp-content/plugins/patsch9-orderdate/dist/package/patsch9-orderdate --format=json --require=./wp-content/plugins/plugin-check/cli.php | tee /tmp/p9od-plugin-check.log
+          python3 tools/check-plugin-report.py /tmp/p9od-plugin-check.log
+          echo 'Strict Plugin Check of the installable package passed. Report is in the job log.' >> "$GITHUB_STEP_SUMMARY"
       - name: Test classic order storage
         run: |
           wp-env run cli wp option update woocommerce_custom_orders_table_enabled no

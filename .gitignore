@@ -4,3 +4,6 @@
 /.wp-env.json
 *.zip
 *.zip.sha256
+
+__pycache__/
+*.pyc

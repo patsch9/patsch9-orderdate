@@ -54,7 +54,7 @@ Keine Kapazitätsbuchung, standortspezifischen Terminregeln, Zuschläge, Erinner
 - `node --test tests/*.test.cjs`: Kalender-/Block-Verhalten.
 - `python3 tools/build-release.py 2026.11.1-beta3`: ZIP mit festem Ordner `patsch9-orderdate` und SHA-256-Prüfsumme.
 - Pull Requests prüfen PHP 8.2/8.3/8.4, JavaScript, Integration und das gebaute Paket mit WordPress Plugin Check. Kein identischer zweiter Lauf nach dem Merge auf main.
-- Die Action stellt ein installierbares Vorschau-ZIP als Artefakt bereit und prüft Produktseite sowie beide Checkout-Varianten im echten Browser mit Storefront.
+- Die Action baut und prüft das installierbare Paket. Vorschau-ZIPs werden nur bei manuellem Workflowstart mit `upload-preview` hochgeladen. Produktseite sowie beide Checkout-Varianten werden im echten Browser mit Storefront geprüft.
 - Tag-Releases prüfen Herkunft aus main, synchronisieren Paketversionen und veröffentlichen ZIP + Prüfsumme. Kein WordPress.org-Deployment eingerichtet.
 
 Vor produktivem Einsatz müssen außerdem Theme, Zahlungsarten und die eingesetzte WooCommerce-Version in einer Staging-Installation durchgespielt werden. Automatisierte Tests ersetzen diesen Shop-Abgleich nicht.
