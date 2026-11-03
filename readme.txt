@@ -31,7 +31,7 @@ Supports simple and variable products. Variations inherit the parent product rul
 
 Use classic product pages for product-level date selection. Product Add-to-Cart Blocks, the new product editor and express checkout integrations do not include a dedicated product date selector. Purchase requests without a required date are rejected.
 
-No appointment capacity, multiple pickup locations, automatic public holidays or shipping method are included. Date selection applies to enabled products independently of the shipping method; configure pickup shipping separately in WooCommerce.
+No appointment capacity, automatic public holidays or shipping method are included. Date selection applies to enabled products independently of the shipping method; configure pickup shipping separately in WooCommerce.
 
 No external services, telemetry or CDN assets. Dates are stored locally with WooCommerce orders and follow their retention and privacy processes. Uninstallation preserves configuration and historical order dates.
 
@@ -68,6 +68,17 @@ No. Date selection applies independently of shipping methods. Configure local pi
 
 == Changelog ==
 
+= 2026.11.1 =
+* Add product- and checkout-level pickup dates with weekday, specific-date, blackout, preparation-time and booking-horizon rules.
+* Add global and product-specific pickup time windows, weekday overrides, overlapping-window intersection and server-side date/time validation.
+* Add the pickup manager with open pickups, per-line rescheduling, protected customer confirmation links and WooCommerce pickup-location snapshots.
+* Add the WooCommerce order statuses Ready for pickup and Collected with matching customer emails.
+* Add payment at pickup for classic checkout and Checkout Blocks. Availability can be allowed or denied per product and inherited from product categories; mixed carts require every item to be allowed.
+* Harden status transitions for HPOS, bulk and programmatic saves; rescheduling confirmation pages are explicitly non-cacheable.
+* Align payment-at-pickup visibility with pickup-location eligibility and reject stale time-window values after rule changes.
+* Deduplicate variation rules by parent product and localize Checkout Block time-window labels consistently.
+* Add integration and regression coverage for classic order storage, HPOS, Store API, payment eligibility, status guards and customer confirmation flows.
+
 = 2026.11.1-beta3 =
 * Vor Ort zahlen für klassischen Checkout und Checkout Block.
 * Abholmanager mit offenen Abholungen, Umplanung und Kundenbestätigung.
@@ -85,6 +96,9 @@ No. Date selection applies independently of shipping methods. Configure local pi
 
 == Upgrade Notice ==
 
+= 2026.11.1 =
+Payment at pickup is opt-in per product or category and remains disabled unless all cart items are eligible. Activate the gateway under WooCommerce payments if required and test pickup statuses, emails and checkout on staging.
+
 = 2026.11.1-beta3 =
 Activate payment at collection under WooCommerce payments if required. Existing orders are indexed in background batches. Test status emails and checkout on staging.
 
@@ -93,4 +107,3 @@ Existing products inherit global windows when configured. An empty global schedu
 
 = 2026.11.1-beta1 =
 First prerelease. Test with your theme, checkout and payment methods before production use.
-
