@@ -411,6 +411,7 @@ final class PickupManager {
 			return;
 		}
 		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- WordPress and cache plugins require this exact standard constant name.
 			define( 'DONOTCACHEPAGE', true );
 		}
 		nocache_headers();
