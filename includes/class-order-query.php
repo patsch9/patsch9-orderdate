@@ -29,6 +29,7 @@ final class OrderQuery {
 			if ( ! $indexed ) {
 				$meta_query[] = array( 'key' => PickupManager::INDEX, 'value' => 'yes' );
 			}
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Bounded pickup-manager query on the maintained _p9od_managed index marker; HPOS requires meta_query for order meta.
 			$args['meta_query'] = $meta_query;
 			unset( $args['p9od_managed'] );
 			return $args;
