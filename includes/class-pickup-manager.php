@@ -14,6 +14,7 @@ final class PickupManager {
 		add_filter( 'wc_order_statuses', array( self::class, 'status_labels' ) );
 		add_action( 'woocommerce_process_shop_order_meta', array( self::class, 'guard_admin_status' ), 5 );
 		add_filter( 'woocommerce_rest_pre_insert_shop_order_object', array( self::class, 'guard_rest_status' ), 10, 2 );
+		add_action( 'woocommerce_before_order_object_save', array( self::class, 'guard_status_save' ), 5 );
 		add_action( 'woocommerce_after_order_object_save', array( self::class, 'index' ) );
 		add_filter( 'woocommerce_order_data_store_cpt_get_orders_query', array( self::class, 'legacy_query' ), 10, 2 );
 		add_action( 'p9od_index_orders', array( self::class, 'backfill' ) );
@@ -120,12 +121,20 @@ final class PickupManager {
 		}
 	}
 
+	/** Validate every persisted status transition, including bulk actions and programmatic saves. */
+	public static function guard_status_save( \WC_Abstract_Order $order ): void {
+		if ( ! $order instanceof \WC_Order || ! array_key_exists( 'status', $order->get_changes() ) ) {
+			return;
+		}
+		self::assert_status( $order, $order->get_status() );
+	}
+
 	/** Validate before WooCommerce mutates the order; WC_Order::save catches exceptions. */
 	public static function guard_admin_status( int $id ): void {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- WooCommerce verifies its order-save nonce and capabilities before this lifecycle hook.
 		$target = isset( $_POST['order_status'] ) && is_string( $_POST['order_status'] ) ? sanitize_key( wp_unslash( $_POST['order_status'] ) ) : '';
 		$order = wc_get_order( $id );
-		if ( ! $order || ! current_user_can( 'edit_shop_order', $id ) ) {
+		if ( ! $order || ( ! current_user_can( 'manage_woocommerce' ) && ! current_user_can( 'edit_shop_orders' ) ) ) {
 			return;
 		}
 		try {
@@ -254,9 +263,6 @@ final class PickupManager {
 		check_admin_referer( 'p9od_manage_pickup', 'p9od_nonce' );
 		try {
 			$id = absint( self::input( 'order_id' ) );
-			if ( ! current_user_can( 'edit_shop_order', $id ) ) {
-				throw new \RuntimeException( esc_html__( 'Keine Berechtigung.', 'patsch9-orderdate' ) );
-			}
 			$message = self::locked( $id, static function ( $order ) {
 				if ( ! hash_equals( self::version( $order ), self::input( 'version' ) ) ) {
 					throw new \RuntimeException( esc_html__( 'Die Bestellung wurde inzwischen geändert. Bitte die Seite neu laden.', 'patsch9-orderdate' ) );
@@ -403,6 +409,10 @@ final class PickupManager {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- GET only renders the confirmation form.
 		if ( ! isset( $_GET['p9od_confirm'] ) ) {
 			return;
+		}
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- WordPress and cache plugins require this exact standard constant name.
+			define( 'DONOTCACHEPAGE', true );
 		}
 		nocache_headers();
 		header( 'Referrer-Policy: no-referrer' );

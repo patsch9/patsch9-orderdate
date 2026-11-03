@@ -60,7 +60,7 @@
       timeRequired ? el('select', { id: 'p9od-block-time', required: true, value: time, disabled: !date,
         onChange: function (event) { setTime(event.target.value); } },
         el('option', { value: '' }, __('Bitte Zeitfenster wählen', 'patsch9-orderdate')),
-        windows.map(function (window) { return el('option', { key: window, value: window }, window.replace('-', '–')); })) : null);
+        windows.map(function (window) { return el('option', { key: window, value: window }, window.replace('-', '–') + ' ' + __('Uhr', 'patsch9-orderdate')); })) : null);
   }
   window.wc.blocksCheckout.registerCheckoutBlock({
     metadata: { apiVersion: 3, name: ns + '/pickup-date', parent: ['woocommerce/checkout-fields-block'] }, component: PickupDate
