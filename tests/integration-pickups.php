@@ -210,7 +210,9 @@ try {
 	$request = new WP_REST_Request( 'GET', '/wc/store/v1/cart' );
 	$response = rest_do_request( $request );
 	$cart_data = $response->get_data();
-	$assert( false === ( $cart_data['extensions'][ Blocks::NS ]['pay_on_pickup_allowed'] ?? null ), 'Checkout Block receives the same pickup-payment eligibility as the server gateway.' );
+	$extensions = isset( $cart_data['extensions'] ) ? (array) $cart_data['extensions'] : array();
+	$namespace_data = isset( $extensions[ Blocks::NS ] ) ? (array) $extensions[ Blocks::NS ] : array();
+	$assert( false === ( $namespace_data['pay_on_pickup_allowed'] ?? null ), 'Checkout Block receives the same pickup-payment eligibility as the server gateway.' );
 	WC()->cart->empty_cart();
 	$product->set_virtual( true );
 	$product->save();
