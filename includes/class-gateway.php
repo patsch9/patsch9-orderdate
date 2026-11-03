@@ -28,15 +28,15 @@ final class Gateway extends \WC_Payment_Gateway {
 		}
 		if ( is_checkout_pay_page() ) {
 			$order = wc_get_order( absint( get_query_var( 'order-pay' ) ) );
-			return $order && PickupLocations::order_eligible( $order );
+			return $order && PickupLocations::order_eligible( $order ) && PayOnPickup::order_allowed( $order );
 		}
-		return PickupLocations::cart_eligible();
+		return PickupLocations::cart_eligible() && PayOnPickup::cart_allowed();
 	}
 
 	public function process_payment( $order_id ) {
 		$order = wc_get_order( $order_id );
-		if ( ! $order || ! PickupLocations::order_eligible( $order ) || $order->is_paid() ) {
-			throw new \Exception( esc_html__( 'Vor Ort zahlen ist nur für unbezahlte Abholbestellungen verfügbar.', 'patsch9-orderdate' ) );
+		if ( ! $order || ! PickupLocations::order_eligible( $order ) || ! PayOnPickup::order_allowed( $order ) || $order->is_paid() ) {
+			throw new \Exception( esc_html__( 'Vor Ort zahlen ist nur für unbezahlte Abholbestellungen mit dafür freigegebenen Produkten verfügbar.', 'patsch9-orderdate' ) );
 		}
 		if ( ! $order->has_status( 'on-hold' ) ) {
 			$order->update_status( 'on-hold', __( 'Zahlung bei Abholung ausstehend.', 'patsch9-orderdate' ) );

@@ -77,12 +77,14 @@ final class Blocks {
 				return array(
 					'required' => (bool) $rules,
 					'time_required' => Rules::requires_time( $rules ),
+					'pay_on_pickup_allowed' => PayOnPickup::cart_allowed(),
 					'dates' => array_map( static fn( $date ) => array( 'value' => $date, 'label' => Plugin::display( $date ), 'windows' => Plugin::windows( $date, $rules ) ), $dates ),
 				);
 			},
 			'schema_callback' => static fn() => array(
 				'required' => array( 'type' => 'boolean', 'readonly' => true ),
 				'time_required' => array( 'type' => 'boolean', 'readonly' => true ),
+				'pay_on_pickup_allowed' => array( 'type' => 'boolean', 'readonly' => true ),
 				'dates' => array( 'type' => 'array', 'readonly' => true, 'items' => array( 'type' => 'object', 'properties' => array( 'value' => array( 'type' => 'string' ), 'label' => array( 'type' => 'string' ), 'windows' => array( 'type' => 'array', 'items' => array( 'type' => 'string' ) ) ) ) ),
 			), 'schema_type' => ARRAY_A,
 		) );

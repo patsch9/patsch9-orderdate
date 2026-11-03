@@ -1,6 +1,7 @@
 <?php
 /** Run only with wp eval-file in a disposable WooCommerce installation. */
 use Patsch9\Orderdate\Gateway;
+use Patsch9\Orderdate\PayOnPickup;
 use Patsch9\Orderdate\PickupLocations;
 use Patsch9\Orderdate\PickupManager;
 use Patsch9\Orderdate\Plugin;
@@ -12,6 +13,7 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 $checks = 0;
 $orders = array();
 $products = array();
+$term_ids = array();
 $messages = array();
 $options = array();
 foreach ( array( 'timezone_string', 'woocommerce_manage_stock', 'woocommerce_p9od_pay_on_pickup_settings', 'pickup_location_pickup_locations', 'p9od_settings' ) as $key ) {
@@ -45,6 +47,26 @@ try {
 	$product->update_meta_data( Plugin::META, Rules::normalize( array( 'mode' => 'product', 'weekdays' => range( 1, 7 ), 'time_mode' => 'custom', 'time_windows' => array( '*' => array( '13:00-14:00' ) ) ), wp_timezone() ) );
 	$product->save();
 	$products[] = $product;
+	$assert( ! PayOnPickup::product_allowed( $product->get_id() ), 'Products are denied for pickup payment until explicitly enabled.' );
+	$parent = wp_insert_term( 'P9OD payment parent', 'product_cat' );
+	if ( is_wp_error( $parent ) ) {
+		throw new RuntimeException( $parent->get_error_message() );
+	}
+	$term_ids[] = (int) $parent['term_id'];
+	$child = wp_insert_term( 'P9OD payment child', 'product_cat', array( 'parent' => (int) $parent['term_id'] ) );
+	if ( is_wp_error( $child ) ) {
+		throw new RuntimeException( $child->get_error_message() );
+	}
+	$term_ids[] = (int) $child['term_id'];
+	update_term_meta( (int) $parent['term_id'], PayOnPickup::TERM_META, 'yes' );
+	wp_set_object_terms( $product->get_id(), array( (int) $child['term_id'] ), 'product_cat' );
+	$assert( PayOnPickup::product_allowed( $product->get_id() ), 'A parent product category can enable pickup payment for child-category products.' );
+	$product->update_meta_data( PayOnPickup::PRODUCT_META, 'no' );
+	$product->save();
+	$assert( ! PayOnPickup::product_allowed( $product->get_id() ), 'An explicit product denial overrides an enabled category.' );
+	$product->update_meta_data( PayOnPickup::PRODUCT_META, 'yes' );
+	$product->save();
+	$assert( PayOnPickup::product_allowed( $product->get_id() ), 'An explicit product allow enables pickup payment.' );
 	$date = current_datetime()->modify( '+3 days' )->format( 'Y-m-d' );
 	$new_date = current_datetime()->modify( '+4 days' )->format( 'Y-m-d' );
 	$order = wc_create_order();
@@ -69,6 +91,7 @@ try {
 	$order->add_item( $shipping );
 	$order->calculate_totals();
 	$order->save();
+	$assert( PayOnPickup::order_allowed( $order ), 'Orders are eligible only when every line item allows pickup payment.' );
 	$assert( isset( WC()->payment_gateways()->payment_gateways()['p9od_pay_on_pickup'] ), 'Gateway registered in WooCommerce.' );
 	$gateway = new Gateway();
 	$assert( 'no' === $gateway->enabled, 'Payment gateway disabled until explicitly enabled.' );
@@ -170,6 +193,7 @@ try {
 	$product->save();
 	WC()->cart->add_to_cart( $product->get_id(), 1, 0, array(), array( Plugin::DATE => $date, Plugin::TIME => '13:00-14:00' ) );
 	WC()->cart->calculate_totals();
+	$assert( PayOnPickup::cart_allowed(), 'Cart allowlist accepts an explicitly enabled product.' );
 	$request = new WP_REST_Request( 'POST', '/wc/store/v1/checkout' );
 	$request->set_header( 'Nonce', wp_create_nonce( 'wc_store_api' ) );
 	$request->set_param( 'payment_method', 'p9od_pay_on_pickup' );
@@ -187,6 +211,7 @@ try {
 } finally {
 	foreach ( $orders as $order ) { $order->delete( true ); }
 	foreach ( $products as $product ) { $product->delete( true ); }
+	foreach ( array_reverse( $term_ids ) as $term_id ) { wp_delete_term( $term_id, 'product_cat' ); }
 	foreach ( $options as $key => $value ) {
 		null === $value ? delete_option( $key ) : update_option( $key, $value );
 	}

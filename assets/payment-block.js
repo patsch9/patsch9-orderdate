@@ -11,7 +11,10 @@
     content: content,
     edit: content,
     canMakePayment: function (args) {
-      if (!args.cartNeedsShipping) return true; // Server validates dated, non-shipping carts.
+      var extensions = args.cart && args.cart.extensions ? args.cart.extensions : {};
+      var orderdate = extensions['patsch9-orderdate'] || {};
+      if (orderdate.pay_on_pickup_allowed !== true) return false;
+      if (!args.cartNeedsShipping) return true;
       var packages = Object.values(args.selectedShippingMethods || {});
       return packages.length > 0 && packages.every(function (methods) {
         var selected = Array.isArray(methods) ? methods : [methods];
