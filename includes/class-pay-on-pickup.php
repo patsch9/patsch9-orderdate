@@ -17,7 +17,7 @@ final class PayOnPickup {
 		add_action( 'woocommerce_product_options_general_product_data', array( self::class, 'product_field' ) );
 		add_action( 'woocommerce_admin_process_product_object', array( self::class, 'save_product' ), 20 );
 		add_action( 'product_cat_add_form_fields', array( self::class, 'category_add_field' ) );
-		add_action( 'product_cat_edit_form_fields', array( self::class, 'category_edit_field' ), 10, 2 );
+		add_action( 'product_cat_edit_form_fields', array( self::class, 'category_edit_field' ) );
 		add_action( 'created_product_cat', array( self::class, 'save_category' ) );
 		add_action( 'edited_product_cat', array( self::class, 'save_category' ) );
 	}
@@ -86,9 +86,9 @@ final class PayOnPickup {
 		if ( ! wp_verify_nonce( $nonce, 'p9od_pay_on_pickup_category' ) ) {
 			return;
 		}
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified above; checkbox is reduced to a boolean allowlist value.
-		$allowed = isset( $_POST['p9od_pay_on_pickup_category'] ) && 'yes' === sanitize_key( wp_unslash( $_POST['p9od_pay_on_pickup_category'] ) );
-		if ( $allowed ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified above; checkbox is reduced to an allowlisted value.
+		$value = isset( $_POST['p9od_pay_on_pickup_category'] ) && is_string( $_POST['p9od_pay_on_pickup_category'] ) ? sanitize_key( wp_unslash( $_POST['p9od_pay_on_pickup_category'] ) ) : '';
+		if ( self::ALLOW === $value ) {
 			update_term_meta( $term_id, self::TERM_META, self::ALLOW );
 		} else {
 			delete_term_meta( $term_id, self::TERM_META );
