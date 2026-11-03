@@ -5,7 +5,7 @@ Requires at least: 6.9.5
 Tested up to: 7.1
 Requires PHP: 8.2
 Requires Plugins: woocommerce
-Stable tag: 2026.11.1-beta2
+Stable tag: 2026.11.1-beta3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -68,6 +68,13 @@ No. Date selection applies independently of shipping methods. Configure local pi
 
 == Changelog ==
 
+= 2026.11.1-beta3 =
+* Vor Ort zahlen für klassischen Checkout und Checkout Block.
+* Abholmanager mit offenen Abholungen, Umplanung und Kundenbestätigung.
+* WooCommerce-Status Bereit zur Abholung / Abgeholt mit E-Mails im Shopdesign.
+* Übernahme der WooCommerce-Abholorte und historischer Adressdaten.
+* Integrationstests für beide Bestellspeicherarten.
+
 = 2026.11.1-beta2 =
 * Add optional pickup time windows with global defaults, per-product and weekday overrides.
 * Intersect checkout windows and validate date/time selections server-side.
@@ -78,8 +85,12 @@ No. Date selection applies independently of shipping methods. Configure local pi
 
 == Upgrade Notice ==
 
+= 2026.11.1-beta3 =
+Activate payment at collection under WooCommerce payments if required. Existing orders are indexed in background batches. Test status emails and checkout on staging.
+
 = 2026.11.1-beta2 =
 Existing products inherit global windows when configured. An empty global schedule preserves date-only selection. Test with your checkout and payment methods.
 
 = 2026.11.1-beta1 =
 First prerelease. Test with your theme, checkout and payment methods before production use.
+

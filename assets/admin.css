@@ -280,3 +280,14 @@
 		padding: 14px;
 	}
 }
+
+
+.p9od-manager { max-width: 1100px; }
+.p9od-manager .p9od-pickup-card { box-sizing: border-box; margin: 18px 0; padding: 20px; border: 1px solid #c3c4c7; background: #fff; border-radius: 4px; }
+.p9od-manager .p9od-pickup-card h2 { margin-top: 0; }
+.p9od-manager form { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.p9od-manager details { margin-top: 18px; }
+.p9od-manager details form { display: block; }
+.p9od-manager summary { cursor: pointer; font-weight: 600; }
+.p9od-manager label { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.p9od-manager input, .p9od-manager select { max-width: 100%; }

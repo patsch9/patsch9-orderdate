@@ -21,7 +21,7 @@ stage = output / 'package' / SLUG
 if stage.exists():
     shutil.rmtree(stage)
 stage.mkdir(parents=True)
-for name in (f'{SLUG}.php', 'readme.txt', 'LICENSE', 'includes', 'assets', 'blocks'):
+for name in (f'{SLUG}.php', 'readme.txt', 'LICENSE', 'includes', 'assets', 'blocks', 'templates'):
     path = source / name
     if path.is_symlink() or any(item.is_symlink() for item in path.rglob('*')):
         raise SystemExit('Symlinks must not be packaged')
@@ -53,3 +53,4 @@ with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as package:
 checksum = hashlib.sha256(archive.read_bytes()).hexdigest()
 archive.with_suffix('.zip.sha256').write_text(f'{checksum}  {archive.name}\n')
 print(archive)
+

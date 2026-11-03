@@ -138,7 +138,7 @@ final class Admin {
 		self::window_editor( 'p9od_time_windows', $settings['time_windows'] );
 		echo '</section></div>';
 		submit_button();
-		echo '<p class="description p9od-settings-note">' . esc_html__( 'Versandart „Abholung“ separat in WooCommerce konfigurieren.', 'patsch9-orderdate' ) . '</p></form></div>';
+		echo '<p class="description p9od-settings-note">' . esc_html__( 'Abholorte unter WooCommerce → Einstellungen → Versand konfigurieren. Offene Abholungen stehen im Abholmanager.', 'patsch9-orderdate' ) . '</p></form></div>';
 	}
 
 	public static function save_settings(): void {
@@ -165,7 +165,7 @@ final class Admin {
 
 	public static function assets(): void {
 		$screen = get_current_screen();
-		if ( $screen && ( 'product' === $screen->id || 'woocommerce_page_p9od' === $screen->id ) ) {
+		if ( $screen && in_array( $screen->id, array( 'product', 'woocommerce_page_p9od', 'woocommerce_page_p9od-pickups' ), true ) ) {
 			wp_enqueue_style( 'p9od-admin', plugins_url( 'assets/admin.css', P9OD_FILE ), array( 'dashicons' ), P9OD_VERSION );
 			wp_enqueue_script( 'p9od-admin', plugins_url( 'assets/admin.js', P9OD_FILE ), array(), P9OD_VERSION, true );
 		}

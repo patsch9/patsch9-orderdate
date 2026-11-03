@@ -1,6 +1,6 @@
 # Patsch9 Orderdate for WooCommerce
 
-Abholtermine je Produkt: Auswahl auf der Produktseite oder als gemeinsamer Termin im klassischen WooCommerce-Checkout und im Checkout Block. Entwicklungsversion **2026.11.1-beta2**.
+Abholtermine je Produkt: Auswahl auf der Produktseite oder als gemeinsamer Termin im klassischen WooCommerce-Checkout und im Checkout Block. Entwicklungsversion **2026.11.1-beta3**.
 
 ## Funktionsumfang
 
@@ -13,6 +13,10 @@ Abholtermine je Produkt: Auswahl auf der Produktseite oder als gemeinsamer Termi
 - Verschiedene Termine desselben Produkts werden getrennte Warenkorbpositionen.
 - Anzeige in Warenkorb, Bestellung, Bestellverwaltung und E-Mails; Datenspeicherung über WooCommerce CRUD für HPOS.
 - Einfache und variable Produkte; Varianten erben die Regeln des Hauptprodukts.
+- Zahlungsart „Vor Ort zahlen“ im klassischen Checkout und Checkout Block, nur bei Abholung.
+- Abholmanager mit offenen Abholungen, Umplanung je Position und geschützter Kundenbestätigung.
+- WooCommerce-Bestellstatus „Bereit zur Abholung“ und „Abgeholt“ mit eigenen Kunden-E-Mails.
+- Abholorte aus der WooCommerce-Versandauswahl inklusive historischer Adresse in Verwaltung und E-Mails.
 
 ## Einrichtung
 
@@ -20,7 +24,9 @@ Abholtermine je Produkt: Auswahl auf der Produktseite oder als gemeinsamer Termi
 2. Installierbares Plugin-ZIP unter **Plugins → Installieren → Plugin hochladen** hochladen. GitHub-Quellcode-ZIPs sind keine Release-Pakete.
 3. Unter **WooCommerce → Abholtermine** Buchungshorizont, globale Sperrtage und optionale Zeitfenster einstellen.
 4. Produkt bearbeiten: **Produktdaten → Abholtermine**. Auswahlort und Regeln festlegen, Produkt speichern.
-5. Abholung als Versandart bei Bedarf separat in WooCommerce konfigurieren.
+5. Abholorte unter **WooCommerce → Einstellungen → Versand → Abholung vor Ort** konfigurieren. Im klassischen Checkout wird die Versandart „Abholung vor Ort“ aus den Versandzonen unterstützt.
+6. Bei Bedarf **WooCommerce → Einstellungen → Zahlungen → Vor Ort zahlen** aktivieren.
+7. Abholungen unter **WooCommerce → Abholmanager** bearbeiten; E-Mails unter **WooCommerce → Einstellungen → E-Mails** konfigurieren.
 
 Im Checkout Block wird das Feld beim Rendern automatisch ergänzt, falls es fehlt. Die gespeicherte Kassenseite wird dabei nicht verändert. Im Blockeditor lässt sich der Block **Abholdatum** innerhalb der Checkout-Felder auch manuell platzieren.
 
@@ -39,16 +45,16 @@ Beispiel: Produkt A ist mittwochs/freitags verfügbar, Produkt B nur am 13.11.20
 
 ## Grenzen der ersten Version
 
-Keine Kapazitätsbuchung, Filialen, Zuschläge, Erinnerungen, automatische Feiertagsberechnung oder eigene Versandmethode. Keine separaten Regeln pro Variante. Der neue Produkteditor, Product-Add-to-Cart-Blocks und Express-/Direktkauf-Integrationen erhalten in dieser Version keine eigene Produktauswahl; fehlende Termine werden serverseitig abgewiesen. Dafür die klassische Produktseite verwenden. Ein Kalenderdatum ist noch keine Kapazitätsreservierung.
+Keine Kapazitätsbuchung, standortspezifischen Terminregeln, Zuschläge, Erinnerungen, automatische Feiertagsberechnung oder eigene Versandmethode. Keine separaten Regeln pro Variante. Der neue Produkteditor, Product-Add-to-Cart-Blocks und Express-/Direktkauf-Integrationen erhalten in dieser Version keine eigene Produktauswahl; fehlende Termine werden serverseitig abgewiesen. Dafür die klassische Produktseite verwenden. Ein Kalenderdatum ist noch keine Kapazitätsreservierung.
 
 ## Entwicklung und Releases
 
 - `php tests/test-rules.php`: reine Terminregeln ohne WordPress.
 - `wp eval-file wp-content/plugins/patsch9-orderdate/tests/integration.php`: isolierte Testinstallation mit WooCommerce; erstellt und entfernt eigene Testdaten.
 - `node --test tests/*.test.cjs`: Kalender-/Block-Verhalten.
-- `python3 tools/build-release.py 2026.11.1-beta2`: ZIP mit festem Ordner `patsch9-orderdate` und SHA-256-Prüfsumme.
+- `python3 tools/build-release.py 2026.11.1-beta3`: ZIP mit festem Ordner `patsch9-orderdate` und SHA-256-Prüfsumme.
 - Pull Requests prüfen PHP 8.2/8.3/8.4, JavaScript, Integration und das gebaute Paket mit WordPress Plugin Check. Kein identischer zweiter Lauf nach dem Merge auf main.
-- Die Action stellt ein installierbares Vorschau-ZIP als Artefakt bereit und prüft Produktseite sowie beide Checkout-Varianten im echten Browser mit Storefront.
+- Die Action baut und prüft das installierbare Paket. Vorschau-ZIPs werden nur bei manuellem Workflowstart mit `upload-preview` hochgeladen. Produktseite sowie beide Checkout-Varianten werden im echten Browser mit Storefront geprüft.
 - Tag-Releases prüfen Herkunft aus main, synchronisieren Paketversionen und veröffentlichen ZIP + Prüfsumme. Kein WordPress.org-Deployment eingerichtet.
 
 Vor produktivem Einsatz müssen außerdem Theme, Zahlungsarten und die eingesetzte WooCommerce-Version in einer Staging-Installation durchgespielt werden. Automatisierte Tests ersetzen diesen Shop-Abgleich nicht.
@@ -70,3 +76,16 @@ Je Produkt stehen **globale Zeitfenster**, **eigene Zeitfenster** und **nur Datu
 Im Checkout werden überlappende Zeiträume ermittelt: `13:00–15:00` und `14:00–16:00` ergeben `14:00–15:00`. Tage ohne gemeinsames Fenster werden nicht angeboten. Die Uhrzeiten verwenden die WordPress-Zeitzone. Für heute sind nur Fenster mit einem noch bevorstehenden Beginn buchbar. Fenster müssen am gleichen Kalendertag enden und dürfen sich innerhalb desselben Tagesplans nicht überschneiden. Eine Auswahl reserviert keine mengenbegrenzte Kapazität.
 
 Datum und Zeitfenster werden je Position gespeichert und in Bestellungen sowie E-Mails angezeigt. Verschiedene Fenster desselben Produkts ergeben getrennte Warenkorbpositionen. Änderungen am Zeitplan können ältere Warenkörbe ungültig machen; historische Bestelltermine bleiben erhalten.
+
+
+## Abholmanager und Zahlung vor Ort
+
+Die Übersicht enthält offene Bestellungen mit gespeicherten Abholterminen oder WooCommerce-Abholversand. Auch bereits als „Abgeschlossen“ markierte Bestellungen bleiben darin, bis sie „Abgeholt“ sind. Stornierte, erstattete, fehlgeschlagene Bestellungen und Checkout-Entwürfe erscheinen nicht. Ältere Bestellungen werden nach dem Update in Hintergrundbatches über WP-Cron eingelesen; bei deaktiviertem WP-Cron muss ein externer Cron eingerichtet sein.
+
+„Bereit zur Abholung“ sendet die Bereitstellungs-E-Mail. „Abgeholt“ sendet die Abholbestätigung. Bei Zahlung vor Ort muss im Abholmanager der tatsächliche Zahlungseingang bestätigt werden. Die Bestellung bleibt bis dahin unbezahlt; Bestand wird nur einmal reduziert. Andere Zahlungsarten werden über ihren jeweiligen Zahlungsanbieter bzw. WooCommerce als bezahlt erfasst.
+
+Bei **Abholung umplanen** eine Position und einen der verfügbaren Termine wählen. Der Kunde erhält eine E-Mail mit einem sieben Tage gültigen Bestätigungslink. Das Öffnen des Links ändert noch nichts; erst die Schaltfläche bestätigt. Bis dahin gilt der bisherige Termin. Ein erneuter Versand ersetzt den alten Link. Zurückziehen erhält den bisherigen Termin. Nach Kundenbestätigung erhalten Kunde und Shop eine Bestätigung; Änderungen und Versandfehler werden in den Bestellnotizen festgehalten. Je Bestellung ist ein Vorschlag gleichzeitig offen. Erst nach Bestätigung oder Zurückziehen kann die nächste Position umgeplant werden.
+
+Die neuen Status gelten für die gesamte Bestellung. Bei mehreren Terminen ist „Abgeholt“ erst nach der vollständigen Übergabe zu setzen. Es gibt keine separate Teilabholungsverwaltung. Umplanung nutzt die aktuellen Produktregeln; gelöschte oder deaktivierte Produkte müssen zuerst wieder mit gültigen Regeln versehen werden.
+
+WooCommerce übernimmt die Ortsauswahl im Checkout. Orderdate verwendet den dort gespeicherten Namen und die Adresse; spätere Änderungen der Abholorte schreiben alte Bestellungen nicht um. Die klassische Abholversandart besitzt keine native Filialadressliste, hier wird die konfigurierte Versandbezeichnung angezeigt. Es gibt keine zweite Ortsauswahl und keine unterschiedlichen Terminregeln je Filiale.

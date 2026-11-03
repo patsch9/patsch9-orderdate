@@ -20,7 +20,8 @@ with zipfile.ZipFile(archive) as package:
     assert re.search(r"define\( 'P9OD_VERSION', '([^']+)'", main)[1] == version
     assert re.search(r'^Stable tag: (\S+)', readme, re.M)[1] == version
     assert block['version'] == version
-    for name in ('LICENSE', 'includes/class-rules.php', 'assets/checkout-block.js'):
+    for name in ('LICENSE', 'includes/class-rules.php', 'assets/checkout-block.js', 'includes/class-pickup-manager.php', 'assets/payment-block.js', 'templates/emails/pickup.php', 'templates/emails/plain/pickup.php'):
         assert slug + '/' + name in names
 assert archive.with_suffix('.zip.sha256').read_text().split()[0] == hashlib.sha256(archive.read_bytes()).hexdigest()
 print('Package layout, version consistency and checksum passed.')
+
