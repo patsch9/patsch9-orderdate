@@ -81,7 +81,10 @@ final class Plugin {
 				return false;
 			}
 		}
-		return ! Rules::requires_time( $rules ) || ( is_string( $window ) && in_array( $window, self::windows( $date, $rules ), true ) );
+		if ( ! Rules::requires_time( $rules ) ) {
+			return null === $window || '' === $window;
+		}
+		return is_string( $window ) && in_array( $window, self::windows( $date, $rules ), true );
 	}
 
 	public static function time_label(): string {
@@ -96,14 +99,14 @@ final class Plugin {
 		return WC()->cart ? WC()->cart->get_cart() : array();
 	}
 
-	/** Unique rules only: quantities do not change date availability. */
+	/** Unique rules only: quantities and product variations do not change date availability. */
 	public static function checkout_rules(): array {
 		$rules = array();
 		foreach ( self::cart() as $item ) {
-			$id = (int) ( $item['variation_id'] ?: $item['product_id'] );
-			$rule = self::rule( $id );
+			$product_id = (int) $item['product_id'];
+			$rule = self::rule( $product_id );
 			if ( 'checkout' === $rule['mode'] ) {
-				$rules[ $id ] = $rule;
+				$rules[ $product_id ] = $rule;
 			}
 		}
 		return array_values( $rules );
