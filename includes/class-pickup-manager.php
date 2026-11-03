@@ -311,7 +311,7 @@ final class PickupManager {
 		exit;
 	}
 
-	public static function order_summary( \WC_Order $order ): void {
+	public static function order_summary( \WC_Order $order, bool $show_manager_link = true ): void {
 		if ( ! self::managed( $order ) ) {
 			return;
 		}
@@ -323,7 +323,9 @@ final class PickupManager {
 		if ( is_array( $p ) ) {
 			echo '<p><strong>' . esc_html__( 'Bestätigung ausstehend', 'patsch9-orderdate' ) . ':</strong> ' . esc_html( Plugin::display( $p['date'] ) . ' ' . Plugin::display_time( $p['time'] ) ) . '</p>';
 		}
-		echo '<p><a href="' . esc_url( admin_url( 'admin.php?page=p9od-pickups' ) ) . '">' . esc_html__( 'Abholmanager öffnen', 'patsch9-orderdate' ) . '</a></p>';
+		if ( $show_manager_link ) {
+			echo '<p><a href="' . esc_url( admin_url( 'admin.php?page=p9od-pickups' ) ) . '">' . esc_html__( 'Abholmanager öffnen', 'patsch9-orderdate' ) . '</a></p>';
+		}
 	}
 
 	private static function form_start( \WC_Order $order ): void {
@@ -354,7 +356,7 @@ final class PickupManager {
 		}
 		foreach ( $result->orders as $order ) {
 			echo '<section class="p9od-pickup-card"><h2><a href="' . esc_url( $order->get_edit_order_url() ) . '">#' . esc_html( $order->get_order_number() ) . '</a> · ' . esc_html( $order->get_formatted_billing_full_name() ) . '</h2>';
-			self::order_summary( $order );
+			self::order_summary( $order, false );
 			$p = $order->get_meta( self::PROPOSAL, true );
 			echo '<ul>';
 			foreach ( self::items( $order ) as $item ) {
