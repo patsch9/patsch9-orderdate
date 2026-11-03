@@ -1,5 +1,6 @@
 <?php
 /** Run only with wp eval-file in a disposable WooCommerce installation. */
+use Patsch9\Orderdate\Blocks;
 use Patsch9\Orderdate\Gateway;
 use Patsch9\Orderdate\PayOnPickup;
 use Patsch9\Orderdate\PickupLocations;
@@ -69,6 +70,9 @@ try {
 	$assert( PayOnPickup::product_allowed( $product->get_id() ), 'An explicit product allow enables pickup payment.' );
 	$date = current_datetime()->modify( '+3 days' )->format( 'Y-m-d' );
 	$new_date = current_datetime()->modify( '+4 days' )->format( 'Y-m-d' );
+	$no_time_rule = Rules::normalize( array( 'mode' => 'product', 'weekdays' => range( 1, 7 ), 'time_mode' => 'off', 'time_windows' => array() ), wp_timezone() );
+	$assert( Plugin::selection_allowed( $date, '', array( $no_time_rule ) ), 'A valid date without a required time window remains selectable.' );
+	$assert( ! Plugin::selection_allowed( $date, '13:00-14:00', array( $no_time_rule ) ), 'A stale time window is rejected after time selection is disabled.' );
 	$order = wc_create_order();
 	$orders[] = $order;
 	$order->set_billing_email( 'customer@example.test' );
@@ -140,6 +144,10 @@ try {
 	$assert( str_contains( end( $messages )['message'], 'p9od_confirm' ), 'Proposal email contains the protected confirmation link.' );
 	$pending = clone $order;
 	$rejects( static fn() => PickupManager::assert_status( $pending, PickupManager::READY ), 'Unconfirmed schedule blocks ready status before order mutation.' );
+	$stored_status = $order->get_status();
+	$programmatic = wc_get_order( $order->get_id() );
+	$programmatic->update_status( PickupManager::READY );
+	$assert( $stored_status === wc_get_order( $order->get_id() )->get_status(), 'Programmatic status updates cannot persist READY while a proposal is pending.' );
 	$pending->set_status( PickupManager::READY );
 	$request = new WP_REST_Request( 'PUT', '/wc/v3/orders/' . $order->get_id() );
 	$request->set_param( 'status', PickupManager::READY );
@@ -188,6 +196,21 @@ try {
 	update_option( 'woocommerce_p9od_pay_on_pickup_settings', array( 'enabled' => 'yes' ) );
 	WC()->payment_gateways()->payment_gateways()['p9od_pay_on_pickup']->enabled = 'yes';
 	wc_load_cart();
+	WC()->cart->empty_cart();
+	$plain_product = new WC_Product_Simple();
+	$plain_product->set_name( 'Virtual non-pickup fixture' );
+	$plain_product->set_regular_price( 5 );
+	$plain_product->set_virtual( true );
+	$plain_product->update_meta_data( PayOnPickup::PRODUCT_META, 'yes' );
+	$plain_product->save();
+	$products[] = $plain_product;
+	WC()->cart->add_to_cart( $plain_product->get_id(), 1 );
+	WC()->cart->calculate_totals();
+	$assert( PayOnPickup::cart_allowed() && ! PickupLocations::cart_eligible(), 'A virtual allowlisted cart without pickup rules is not a pickup order.' );
+	$request = new WP_REST_Request( 'GET', '/wc/store/v1/cart' );
+	$response = rest_do_request( $request );
+	$cart_data = $response->get_data();
+	$assert( false === ( $cart_data['extensions'][ Blocks::NS ]['pay_on_pickup_allowed'] ?? null ), 'Checkout Block receives the same pickup-payment eligibility as the server gateway.' );
 	WC()->cart->empty_cart();
 	$product->set_virtual( true );
 	$product->save();
