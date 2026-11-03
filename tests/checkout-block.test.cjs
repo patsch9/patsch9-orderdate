@@ -97,11 +97,13 @@ test('no common date is visible and prevents an empty checkout', () => {
   assert.ok(ui.error);
 });
 
-test('time is explicit, validated and discarded after availability changes', () => {
+test('time is explicit, localized, validated and discarded after availability changes', () => {
   const ui = harness();
   ui.update(true, ['2026-11-13'], true, { '2026-11-13': ['13:00-14:00', '14:00-15:00'] });
   ui.choose('2026-11-13');
   assert.ok(ui.errors.p9od_time);
+  const timeSelect = ui.tree.children.find((child) => child && child.props.id === 'p9od-block-time');
+  assert.equal(timeSelect.children[1][0].children[0], '13:00–14:00 Uhr');
   ui.chooseTime('13:00-14:00');
   assert.equal(ui.error, null);
   assert.equal(ui.time, '13:00-14:00');
