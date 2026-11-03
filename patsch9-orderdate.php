@@ -42,11 +42,13 @@ add_action( 'plugins_loaded', static function () {
 	require_once __DIR__ . '/includes/class-blocks.php';
 	require_once __DIR__ . '/includes/class-pickup-locations.php';
 	require_once __DIR__ . '/includes/class-pickup-manager.php';
+	require_once __DIR__ . '/includes/class-pay-on-pickup.php';
 	require_once __DIR__ . '/includes/class-gateway.php';
 	\Patsch9\Orderdate\Plugin::boot();
 	\Patsch9\Orderdate\Admin::boot();
 	\Patsch9\Orderdate\Blocks::boot();
 	\Patsch9\Orderdate\PickupManager::boot();
+	\Patsch9\Orderdate\PayOnPickup::boot();
 	add_filter( 'woocommerce_payment_gateways', static function ( $gateways ) {
 		$gateways[] = \Patsch9\Orderdate\Gateway::class;
 		return $gateways;
