@@ -77,7 +77,7 @@ final class Blocks {
 				return array(
 					'required' => (bool) $rules,
 					'time_required' => Rules::requires_time( $rules ),
-					'pay_on_pickup_allowed' => PayOnPickup::cart_allowed(),
+					'pay_on_pickup_allowed' => PayOnPickup::cart_allowed() && PickupLocations::cart_eligible(),
 					'dates' => array_map( static fn( $date ) => array( 'value' => $date, 'label' => Plugin::display( $date ), 'windows' => Plugin::windows( $date, $rules ) ), $dates ),
 				);
 			},
