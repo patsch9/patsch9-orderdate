@@ -237,3 +237,21 @@
 		font-size: .9em;
 	}
 }
+
+/* Inform customers about the ordering deadline without changing date selection. */
+.single-product .p9od-order-deadline {
+	box-sizing: border-box;
+	clear: both;
+	margin: .75em 0 1em;
+	padding: .65em .85em;
+	border-inline-start: 3px solid currentColor;
+	background: rgba(127, 127, 127, .08);
+	color: inherit;
+	line-height: 1.5;
+}
+
+.single-product .p9od-order-deadline--expired {
+	color: #9f2020;
+	border-inline-start-color: currentColor;
+}
+
