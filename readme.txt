@@ -1,4 +1,4 @@
-=== Patsch9 Orderdate for WooCommerce ===
+=== Patsch9 Pickup- and Orderdate Manager ===
 Contributors: patsch9
 Tags: woocommerce, pickup, order date, collection
 Requires at least: 6.9.5
@@ -9,11 +9,11 @@ Stable tag: 2026.11.1-beta3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Choose a pickup date per product or at checkout, with weekdays, specific dates, blackout dates and preparation time.
+Manage pickup and order dates in WooCommerce, with per-product and checkout scheduling, collection management and payment at pickup.
 
 == Description ==
 
-Patsch9 Orderdate adds product-specific collection dates to WooCommerce. Configure date selection on the product page or choose a common date at checkout.
+Patsch9 Pickup- and Orderdate Manager adds product-specific pickup dates and a pickup workflow to WooCommerce. Configure a date on the product page or choose a common date at checkout, manage open pickups and notify customers.
 
 * Availability start and end dates.
 * Recurring weekdays, specific calendar dates, or both.
@@ -69,6 +69,7 @@ No. Date selection applies independently of shipping methods. Configure local pi
 == Changelog ==
 
 = 2026.11.1 =
+* Rename the plugin to Patsch9 Pickup- and Orderdate Manager. Retain the patsch9-orderdate installation slug and existing settings for seamless updates.
 * Add product- and checkout-level pickup dates with weekday, specific-date, blackout, preparation-time and booking-horizon rules.
 * Add global and product-specific pickup time windows, weekday overrides, overlapping-window intersection and server-side date/time validation.
 * Add the pickup manager with open pickups, per-line rescheduling, protected customer confirmation links and WooCommerce pickup-location snapshots.
