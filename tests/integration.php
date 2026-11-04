@@ -221,12 +221,15 @@ try {
 	$saved_deadline = OrderDeadline::parse_local( $future_deadline, wp_timezone() );
 	p9od_assert( (string) $saved_deadline === (string) wc_get_product( $off->get_id() )->get_meta( OrderDeadline::META, true ), 'Simple deadline persists as UTC timestamp' );
 	p9od_assert( ! OrderDeadline::expired( wc_get_product( $off->get_id() ) ), 'Future deadline permits sales' );
+	p9od_assert( str_contains( OrderDeadline::notice_text( $off ), wp_date( get_option( 'date_format' ) . ' H:i', (int) $saved_deadline, wp_timezone() ) ), 'Future deadline notice contains shop-local date and time' );
+	p9od_assert( str_contains( OrderDeadline::notice_html( $off ), 'p9od-order-deadline' ), 'Simple product gets a frontend deadline notice' );
 	$_POST['p9od_order_deadline'] = '2027-02-30T12:00';
 	OrderDeadline::save_simple( $off );
 	p9od_assert( (string) $saved_deadline === (string) $off->get_meta( OrderDeadline::META, true ), 'Invalid simple date cannot replace valid deadline' );
 	$off->update_meta_data( OrderDeadline::META, (string) ( time() - 60 ) );
 	$off->save();
 	p9od_assert( OrderDeadline::expired( wc_get_product( $off->get_id() ) ), 'Past deadline closes simple product without pickup rules' );
+	p9od_assert( str_contains( OrderDeadline::notice_html( $off ), 'p9od-order-deadline--expired' ) && str_contains( OrderDeadline::notice_text( $off ), 'nicht mehr bestellt' ), 'Expired simple product clearly explains unavailability' );
 	p9od_assert( ! OrderDeadline::purchasable( true, wc_get_product( $off->get_id() ) ), 'Expired product is not purchasable' );
 	wc_clear_notices();
 	p9od_assert( ! apply_filters( 'woocommerce_add_to_cart_validation', true, $off->get_id(), 1, 0 ), 'Classic add-to-cart cannot bypass simple deadline' );
@@ -273,7 +276,10 @@ try {
 	$GLOBALS['p9od_test_products'][] = $expired_variation->get_id();
 	p9od_assert( ! OrderDeadline::expired( wc_get_product( $variation->get_id() ) ), 'Valid variation remains open' );
 	p9od_assert( OrderDeadline::expired( wc_get_product( $expired_variation->get_id() ) ), 'Other variation closes independently' );
-	p9od_assert( OrderDeadline::variation_active( true, $variation ) && ! OrderDeadline::variation_active( true, $expired_variation ), 'Expired variations are disabled in selector' );
+	p9od_assert( OrderDeadline::purchasable( true, $variation ) && ! OrderDeadline::purchasable( true, $expired_variation ), 'Expired variation is not purchasable while another remains available' );
+	p9od_assert( ! has_filter( 'woocommerce_variation_is_active', array( OrderDeadline::class, 'variation_active' ) ), 'Deadline does not hide variation options before users can read the reason' );
+	p9od_assert( str_contains( OrderDeadline::variation_data( array( 'availability_html' => '' ), $parent, $variation )['availability_html'], 'Bestellbar bis:' ), 'Future variation shows deadline in native WooCommerce availability' );
+	p9od_assert( str_contains( OrderDeadline::variation_data( array( 'availability_html' => '' ), $parent, $expired_variation )['availability_html'], 'p9od-order-deadline--expired' ), 'Expired variation shows reason when selected' );
 	$_POST = array( 'p9od_variation_deadline_nonce' => array( 0 => 'invalid' ), 'p9od_variation_order_deadline' => array( 0 => $past_deadline ) );
 	OrderDeadline::save_variation( $variation, 0 );
 	p9od_assert( ! OrderDeadline::expired( $variation ), 'Invalid variation nonce cannot change deadline' );
@@ -287,6 +293,7 @@ try {
 	OrderDeadline::save_variation( $variation, 0 );
 	$variation->save();
 	p9od_assert( '' === wc_get_product( $variation->get_id() )->get_meta( OrderDeadline::META, true ), 'Clearing the variation deadline restores unlimited availability' );
+	p9od_assert( '' === OrderDeadline::notice_text( $variation ) && '' === OrderDeadline::notice_html( $variation ), 'Variations without deadlines show no notice' );
 	$_POST = array();
 	$block = parse_blocks( '<!-- wp:woocommerce/checkout-fields-block --><div></div><!-- /wp:woocommerce/checkout-fields-block -->' )[0];
 	$once = Blocks::insert_block( $block );
