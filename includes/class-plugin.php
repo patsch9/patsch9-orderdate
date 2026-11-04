@@ -231,6 +231,11 @@ final class Plugin {
 	public static function errors( mixed $checkout_date = '', bool $final = false, mixed $checkout_time = '' ): array {
 		$errors = array();
 		foreach ( self::cart() as $item ) {
+			$product = wc_get_product( (int) ( ( $item['variation_id'] ?? 0 ) ?: ( $item['product_id'] ?? 0 ) ) );
+			if ( $product && OrderDeadline::expired( $product ) ) {
+				$errors[] = OrderDeadline::message( $product );
+				continue;
+			}
 			$rule = self::rule( (int) ( $item['variation_id'] ?: $item['product_id'] ) );
 			if ( 'product' === $rule['mode'] && ! self::selection_allowed( $item[ self::DATE ] ?? '', $item[ self::TIME ] ?? '', array( $rule ) ) ) {
 				/* translators: %s: Product name. */

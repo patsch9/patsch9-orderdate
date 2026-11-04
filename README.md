@@ -4,6 +4,13 @@ Abhol- und Bestelltermine für WooCommerce: individuelle Terminwahl je Produkt o
 
 **Hinweis zur Umbenennung:** Der sichtbare Plugin-Name wurde geändert. Der Installationsordner und Slug `patsch9-orderdate` bleiben für bestehende Installationen und Updates erhalten. Konfigurationen, Metadaten, Zahlungsarten, Checkout-Blöcke und Übersetzungsschlüssel werden nicht umbenannt.
 
+
+### Absoluter Bestellschluss für Artikel
+
+Für **einfache Produkte** unter *Produktdaten → Allgemein → Bestellbar bis* ein optionales Datum mit Uhrzeit setzen. Bei **variablen Produkten** ist das Feld in jeder Variante separat einstellbar. Ohne Eintrag bleibt der Verkauf zeitlich unbegrenzt. Der Zeitpunkt bezieht sich auf die eingestellte WordPress-Shop-Zeitzone; ab Beginn der angegebenen Minute kann der Artikel nicht mehr bestellt werden.
+
+Die Einschränkung gilt unabhängig von Versandart, Abholtermin und Zahlungsart. Sie wird nicht nur in der Produktansicht, sondern auch beim Hinzufügen zum Warenkorb und erneut beim Checkout überprüft. Das frühere Feld *Bestellschluss* in den Abholregeln ist weiterhin nur eine Termin-Vorlaufregel und arbeitet unabhängig davon.
+
 ## Funktionsumfang
 
 - Pro Produkt deaktivierbar oder Auswahl am Produkt / an der Kasse.

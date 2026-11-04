@@ -39,6 +39,8 @@ WooCommerce is a trademark of Automattic Inc. This independent extension is not 
 
 German setup and development documentation is available in the repository README.md.
 
+Absolute Bestellfrist: Einfache Artikel und einzelne Produktvarianten können unabhängig von Versand- und Abholart mit einem optionalen Datum samt Uhrzeit ("Bestellbar bis") versehen werden. Ab Fristablauf verhindert eine serverseitige Prüfung das Hinzufügen und den Checkout, auch bei schon gefülltem Warenkorb.
+
 == Installation ==
 
 1. Install and activate WooCommerce.

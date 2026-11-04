@@ -61,6 +61,16 @@ Warenkorb und Bestell-/Positionsmeta `_p9od_pickup_time` speichern die gewählte
 Die lokale Integration und die Browserprüfung umfassen nun Datum plus Zeitfenster; insbesondere unterschiedliche Positionstermine, gemeinsame Teilintervalle, globale Vererbung, manipulierte Requests und E-Mail-Metadaten.
 
 
+## Absoluter Bestellschluss (nach beta3)
+
+Der absolute Bestellschluss **„Bestellbar bis“** ist unabhängig von der bisherigen Abholregel **„Bestellschluss“** (Uhrzeit, die den frühesten Abholtermin verschiebt). Einfache Produkte haben im Tab „Allgemein“ ein optionales Datum-/Uhrzeitfeld; variable Produkte haben pro Variante ein eigenes Feld. Leere Felder bedeuten keine Einschränkung. Das Feature gilt unabhängig von Abholung, Versandart, Zahlungsart oder aktiviertem Abholkalender.
+
+- Meta: _p9od_order_deadline pro einfachem Produkt bzw. pro Variante; UTC-Unix-Zeitstempel als String. Die Eingabe YYYY-MM-DDTHH:MM wird strikt gegen die Shop-Zeitzone validiert, nicht existente Sommerzeit-Uhrzeiten werden abgewiesen. Ein Ablauf um 12:00 sperrt ab 12:00:00. Beim späteren Wechsel der Shop-Zeitzone bleibt der tatsächliche Ablaufzeitpunkt unverändert.
+- Speicherung: WooCommerce CRUD in woocommerce_admin_process_product_object / woocommerce_admin_process_variation_object mit individuellen Nonces und edit_post-Berechtigung. Ungültige Eingaben ändern bestehende Meta-Werte nicht. Bei beschädigten gespeicherten Fristen wird fail closed verfahren.
+- Anzeige: WooCommerce-Purchasability für einfache Produkte und Varianten sowie variation is active für die Variantenauswahl. Ein abgelaufener Artikel bleibt katalogsichtbar, ist aber nicht mehr kaufbar.
+- Verbindliche Prüfungen: klassisches Add-to-Cart, Store API Add-to-Cart, Store API Mengenänderungen, klassische Warenkorbfehler, Store API Cart Errors sowie letzte Validierung beim Classic- und Block-Checkout über Plugin::errors. Die tatsächlich ausgewählte Varianten-ID wird immer gegenüber der jeweiligen Varianten-Frist geprüft, nicht gegenüber der Eltern-ID. Auch vorhandene Warenkörbe werden beim Abschluss neu validiert.
+- Testfälle: Winter-/Sommerzeit, ungültige Datumswerte, Sommerzeitlücke, Pflicht-Nonce/Berechtigung, persistierte Werte, einzelne Varianten, Classic/Store-API-Hinzufügen und Checkout nach Ablauf.
+
 ## Abholablauf (2026.11.1-beta3)
 
 - `PickupLocations`: WooCommerce-Versandarten `local_pickup`/`pickup_location`; native `pickup_location`-/`pickup_address`-Snapshots.
