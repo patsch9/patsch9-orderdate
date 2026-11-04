@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Patsch9 Orderdate for WooCommerce
+ * Plugin Name: Patsch9 Pickup- and Orderdate Manager
  * Plugin URI: https://github.com/patsch9/patsch9-orderdate
- * Description: Produktbezogene Abholtermine mit Wochentagen, Einzelterminen und Auswahl am Produkt oder an der Kasse.
+ * Description: Abhol- und Bestelltermine für WooCommerce, mit Abholmanager, Zeitfenstern und Zahlung vor Ort.
  * Version: 2026.11.1-beta3
  * Requires at least: 6.9.5
  * Requires PHP: 8.2
@@ -32,7 +32,7 @@ add_action( 'before_woocommerce_init', static function () {
 add_action( 'plugins_loaded', static function () {
 	if ( ! defined( 'WC_VERSION' ) || version_compare( WC_VERSION, '10.9.4', '<' ) ) {
 		add_action( 'admin_notices', static function () {
-			echo '<div class="notice notice-error"><p>' . esc_html__( 'Patsch9 Orderdate benötigt WooCommerce 10.9.4 oder neuer.', 'patsch9-orderdate' ) . '</p></div>';
+			echo '<div class="notice notice-error"><p>' . esc_html__( 'Patsch9 Pickup- and Orderdate Manager benötigt WooCommerce 10.9.4 oder neuer.', 'patsch9-orderdate' ) . '</p></div>';
 		} );
 		return;
 	}
