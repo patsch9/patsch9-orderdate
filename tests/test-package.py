@@ -17,6 +17,9 @@ with zipfile.ZipFile(archive) as package:
     readme = package.read(slug + '/readme.txt').decode()
     block = json.loads(package.read(slug + '/blocks/pickup-date/block.json'))
     assert re.search(r'^ \* Version: (\S+)', main, re.M)[1] == version
+    assert re.search(r'^ \* Plugin Name: (.+)$', main, re.M)[1] == 'Patsch9 Pickup- and Orderdate Manager'
+    assert readme.startswith('=== Patsch9 Pickup- and Orderdate Manager ===\n')
+    assert 'Text Domain: patsch9-orderdate' in main
     assert re.search(r"define\( 'P9OD_VERSION', '([^']+)'", main)[1] == version
     assert re.search(r'^Stable tag: (\S+)', readme, re.M)[1] == version
     assert block['version'] == version

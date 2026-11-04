@@ -348,7 +348,7 @@ final class PickupManager {
 		$statuses = array_diff( array_keys( wc_get_order_statuses() ), array( 'wc-cancelled', 'wc-refunded', 'wc-failed', 'wc-checkout-draft', 'wc-' . self::COLLECTED ) );
 		// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Bounded, indexed order-meta filter required for HPOS-compatible pickup pagination.
 		$result = wc_get_orders( array( 'type' => 'shop_order', 'status' => $statuses, 'limit' => 25, 'page' => $page, 'paginate' => true, 'orderby' => 'date', 'order' => 'ASC', 'p9od_managed' => true, 'meta_query' => array( array( 'key' => self::INDEX, 'value' => 'yes' ) ) ) );
-		echo '<div class="wrap p9od-manager"><h1>' . esc_html__( 'Abholmanager', 'patsch9-orderdate' ) . '</h1>';
+		echo '<div class="wrap p9od-manager"><h1>' . esc_html__( 'Abholmanager', 'patsch9-orderdate' ) . '</h1><p class="description">' . esc_html( 'Patsch9 Pickup- and Orderdate Manager' ) . '</p>';
 		$notice = get_transient( 'p9od_manager_notice_' . get_current_user_id() );
 		if ( $notice ) {
 			delete_transient( 'p9od_manager_notice_' . get_current_user_id() );

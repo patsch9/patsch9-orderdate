@@ -120,7 +120,7 @@ final class Admin {
 			return;
 		}
 		$settings = Plugin::settings();
-		echo '<div class="wrap woocommerce p9od-settings-page"><h1>' . esc_html__( 'Abholtermine', 'patsch9-orderdate' ) . '</h1>';
+		echo '<div class="wrap woocommerce p9od-settings-page"><h1>' . esc_html__( 'Abholtermine', 'patsch9-orderdate' ) . '</h1><p class="description">' . esc_html( 'Patsch9 Pickup- and Orderdate Manager' ) . '</p>';
 		// A per-user transient avoids echoing untrusted query-string messages.
 		$notice = get_transient( 'p9od_notice_' . get_current_user_id() );
 		if ( $notice ) {
