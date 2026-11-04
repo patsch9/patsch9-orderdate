@@ -41,6 +41,8 @@ German setup and development documentation is available in the repository README
 
 Absolute Bestellfrist: Einfache Artikel und einzelne Produktvarianten können unabhängig von Versand- und Abholart mit einem optionalen Datum samt Uhrzeit ("Bestellbar bis") versehen werden. Ab Fristablauf verhindert eine serverseitige Prüfung das Hinzufügen und den Checkout, auch bei schon gefülltem Warenkorb.
 
+A configured deadline is displayed on the simple product page, or after selecting a variation. Expired products show a clear unavailable message. Expired variations remain selectable for explanation but cannot be purchased.
+
 == Installation ==
 
 1. Install and activate WooCommerce.
