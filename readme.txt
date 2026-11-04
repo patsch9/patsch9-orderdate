@@ -69,7 +69,6 @@ No. Date selection applies independently of shipping methods. Configure local pi
 == Changelog ==
 
 = 2026.11.1 =
-* Rename the plugin to Patsch9 Pickup- and Orderdate Manager. Retain the patsch9-orderdate installation slug and existing settings for seamless updates.
 * Add product- and checkout-level pickup dates with weekday, specific-date, blackout, preparation-time and booking-horizon rules.
 * Add global and product-specific pickup time windows, weekday overrides, overlapping-window intersection and server-side date/time validation.
 * Add the pickup manager with open pickups, per-line rescheduling, protected customer confirmation links and WooCommerce pickup-location snapshots.
