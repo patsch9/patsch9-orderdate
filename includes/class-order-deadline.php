@@ -195,7 +195,7 @@ final class OrderDeadline {
 	}
 
 	/** The Store API uses WP_Error, not WC notices, for quantity updates. */
-	public static function validate_quantity( mixed $valid, int $quantity, WC_Product $product, array $cart_item ): mixed {
+	public static function validate_quantity( mixed $valid, int|float $quantity, WC_Product $product, array $cart_item ): mixed {
 		if ( self::expired( $product ) ) {
 			return new WP_Error( 'p9od_order_deadline', self::message( $product ) );
 		}
