@@ -38,6 +38,7 @@ add_action( 'plugins_loaded', static function () {
 	}
 	require_once __DIR__ . '/includes/class-rules.php';
 	require_once __DIR__ . '/includes/class-plugin.php';
+	require_once __DIR__ . '/includes/class-order-deadline.php';
 	require_once __DIR__ . '/includes/class-admin.php';
 	require_once __DIR__ . '/includes/class-blocks.php';
 	require_once __DIR__ . '/includes/class-pickup-locations.php';
@@ -46,6 +47,7 @@ add_action( 'plugins_loaded', static function () {
 	require_once __DIR__ . '/includes/class-pay-on-pickup.php';
 	require_once __DIR__ . '/includes/class-gateway.php';
 	\Patsch9\Orderdate\Plugin::boot();
+	\Patsch9\Orderdate\OrderDeadline::boot();
 	\Patsch9\Orderdate\Admin::boot();
 	\Patsch9\Orderdate\Blocks::boot();
 	\Patsch9\Orderdate\OrderQuery::boot();
