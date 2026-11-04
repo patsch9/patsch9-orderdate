@@ -3,6 +3,7 @@
 use Patsch9\Orderdate\Admin;
 use Patsch9\Orderdate\Blocks;
 use Patsch9\Orderdate\Plugin;
+use Patsch9\Orderdate\OrderDeadline;
 use Patsch9\Orderdate\Rules;
 
 if ( ! defined( 'WP_CLI' ) || ! WP_CLI || ! class_exists( Plugin::class ) ) {
@@ -204,6 +205,89 @@ try {
 	$variation->save();
 	$GLOBALS['p9od_test_products'][] = $variation->get_id();
 	p9od_assert( 'product' === Plugin::rule( $variation->get_id() )['mode'], 'Variation inherits parent rules' );
+	// Absolute order deadlines are independent of pickup rules or shipping methods.
+	$future_deadline = current_datetime()->modify( '+1 day' )->format( 'Y-m-d\TH:i' );
+	$past_deadline = current_datetime()->modify( '-1 day' )->format( 'Y-m-d\TH:i' );
+	$_POST = array( 'p9od_order_deadline_nonce' => 'invalid', 'p9od_order_deadline' => $future_deadline );
+	OrderDeadline::save_simple( $off );
+	p9od_assert( '' === $off->get_meta( OrderDeadline::META, true ), 'Simple deadline requires a valid nonce' );
+	$_POST['p9od_order_deadline_nonce'] = wp_create_nonce( 'p9od_save_order_deadline' );
+	wp_set_current_user( 0 );
+	OrderDeadline::save_simple( $off );
+	p9od_assert( '' === $off->get_meta( OrderDeadline::META, true ), 'Simple deadline requires edit permission' );
+	wp_set_current_user( $admin->ID );
+	OrderDeadline::save_simple( $off );
+	$off->save();
+	$saved_deadline = OrderDeadline::parse_local( $future_deadline, wp_timezone() );
+	p9od_assert( (string) $saved_deadline === (string) wc_get_product( $off->get_id() )->get_meta( OrderDeadline::META, true ), 'Simple deadline persists as UTC timestamp' );
+	p9od_assert( ! OrderDeadline::expired( wc_get_product( $off->get_id() ) ), 'Future deadline permits sales' );
+	$_POST['p9od_order_deadline'] = '2027-02-30T12:00';
+	OrderDeadline::save_simple( $off );
+	p9od_assert( (string) $saved_deadline === (string) $off->get_meta( OrderDeadline::META, true ), 'Invalid simple date cannot replace valid deadline' );
+	$off->update_meta_data( OrderDeadline::META, (string) ( time() - 60 ) );
+	$off->save();
+	p9od_assert( OrderDeadline::expired( wc_get_product( $off->get_id() ) ), 'Past deadline closes simple product without pickup rules' );
+	p9od_assert( ! OrderDeadline::purchasable( true, wc_get_product( $off->get_id() ) ), 'Expired product is not purchasable' );
+	wc_clear_notices();
+	p9od_assert( ! apply_filters( 'woocommerce_add_to_cart_validation', true, $off->get_id(), 1, 0 ), 'Classic add-to-cart cannot bypass simple deadline' );
+	$_POST = array();
+	$expired_add = p9od_rest( 'cart/add-item', array( 'id' => $off->get_id(), 'quantity' => 1 ) );
+	p9od_assert( $expired_add->get_status() >= 400, 'Store API cannot add an expired simple product' );
+	WC()->cart->empty_cart();
+	$off->update_meta_data( OrderDeadline::META, (string) ( time() + DAY_IN_SECONDS ) );
+	$off->save();
+	wc_clear_notices();
+	p9od_assert( (bool) WC()->cart->add_to_cart( $off->get_id(), 1 ), 'Product can be added before its deadline' );
+	$off->update_meta_data( OrderDeadline::META, (string) ( time() - 60 ) );
+	$off->save();
+	p9od_assert( (bool) Plugin::errors(), 'Cart item is revalidated when deadline passes after adding' );
+	$deadline_cart_errors = new WP_Error();
+	do_action( 'woocommerce_store_api_cart_errors', $deadline_cart_errors );
+	p9od_assert( $deadline_cart_errors->has_errors(), 'Store API cart errors include newly expired items' );
+	$quantity_result = apply_filters( 'woocommerce_store_api_cart_item_quantity_validation', true, 2, wc_get_product( $off->get_id() ), array() );
+	p9od_assert( is_wp_error( $quantity_result ), 'Store API quantity updates reject expired items' );
+	$deadline_order = wc_create_order();
+	$orders[] = $deadline_order->get_id();
+	try {
+		Plugin::create_order( $deadline_order, array() );
+		p9od_assert( false, 'Classic checkout accepted a stale expired cart item' );
+	} catch ( Exception $exception ) {
+		p9od_assert( true, 'Classic checkout rejects expired cart items' );
+	}
+	try {
+		Blocks::checkout( $deadline_order, new WP_REST_Request( 'POST' ) );
+		p9od_assert( false, 'Store API checkout accepted a stale expired cart item' );
+	} catch ( \Automattic\WooCommerce\StoreApi\Exceptions\RouteException $exception ) {
+		p9od_assert( true, 'Store API checkout rejects expired cart items' );
+	}
+	WC()->cart->empty_cart();
+	wc_clear_notices();
+	// Variations have separate deadlines; one expired option must not close another.
+	$variation->update_meta_data( OrderDeadline::META, (string) ( time() + DAY_IN_SECONDS ) );
+	$variation->save();
+	$expired_variation = new WC_Product_Variation();
+	$expired_variation->set_parent_id( $parent->get_id() );
+	$expired_variation->set_regular_price( '10' );
+	$expired_variation->update_meta_data( OrderDeadline::META, (string) ( time() - 60 ) );
+	$expired_variation->save();
+	$GLOBALS['p9od_test_products'][] = $expired_variation->get_id();
+	p9od_assert( ! OrderDeadline::expired( wc_get_product( $variation->get_id() ) ), 'Valid variation remains open' );
+	p9od_assert( OrderDeadline::expired( wc_get_product( $expired_variation->get_id() ) ), 'Other variation closes independently' );
+	p9od_assert( OrderDeadline::variation_active( true, $variation ) && ! OrderDeadline::variation_active( true, $expired_variation ), 'Expired variations are disabled in selector' );
+	$_POST = array( 'p9od_variation_deadline_nonce' => array( 0 => 'invalid' ), 'p9od_variation_order_deadline' => array( 0 => $past_deadline ) );
+	OrderDeadline::save_variation( $variation, 0 );
+	p9od_assert( ! OrderDeadline::expired( $variation ), 'Invalid variation nonce cannot change deadline' );
+	$_POST['p9od_variation_deadline_nonce'][0] = wp_create_nonce( 'p9od_save_variation_deadline_' . $variation->get_id() );
+	OrderDeadline::save_variation( $variation, 0 );
+	$variation->save();
+	p9od_assert( OrderDeadline::expired( wc_get_product( $variation->get_id() ) ), 'Variation editor saves its own absolute deadline' );
+	p9od_assert( ! OrderDeadline::validate_add( true, $parent->get_id(), 1, $variation->get_id() ), 'Classic add-to-cart checks selected variation ID' );
+	p9od_assert( ! OrderDeadline::expired( $parent ), 'Variable parent itself has no absolute deadline' );
+	$_POST['p9od_variation_order_deadline'][0] = '';
+	OrderDeadline::save_variation( $variation, 0 );
+	$variation->save();
+	p9od_assert( '' === wc_get_product( $variation->get_id() )->get_meta( OrderDeadline::META, true ), 'Clearing the variation deadline restores unlimited availability' );
+	$_POST = array();
 	$block = parse_blocks( '<!-- wp:woocommerce/checkout-fields-block --><div></div><!-- /wp:woocommerce/checkout-fields-block -->' )[0];
 	$once = Blocks::insert_block( $block );
 	$twice = Blocks::insert_block( $once );
