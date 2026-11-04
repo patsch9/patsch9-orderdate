@@ -44,11 +44,11 @@ final class OrderDeadline {
 			return null;
 		}
 		if ( ! is_string( $value ) || ! preg_match( '/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d$/D', $value ) ) {
-			throw new \InvalidArgumentException( __( 'Bitte ein gültiges Datum mit Uhrzeit angeben.', 'patsch9-orderdate' ) );
+			throw new \InvalidArgumentException( esc_html__( 'Bitte ein gültiges Datum mit Uhrzeit angeben.', 'patsch9-orderdate' ) );
 		}
 		$date = DateTimeImmutable::createFromFormat( '!Y-m-d\TH:i', $value, $zone );
 		if ( ! $date || $date->format( 'Y-m-d\TH:i' ) !== $value ) {
-			throw new \InvalidArgumentException( __( 'Das angegebene Datum oder die Ortszeit existiert nicht.', 'patsch9-orderdate' ) );
+			throw new \InvalidArgumentException( esc_html__( 'Das angegebene Datum oder die Ortszeit existiert nicht.', 'patsch9-orderdate' ) );
 		}
 		return $date->getTimestamp();
 	}
@@ -98,6 +98,22 @@ final class OrderDeadline {
 	}
 
 	/**
+	 * Normalize editor form values before use. Callers verify the relevant nonce
+	 * and edit capability before changing any product metadata.
+	 */
+	private static function posted( string $name ): mixed {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Preserve input shape and immediately unslash/sanitize below; verified by callers.
+		$raw = $_POST[ $name ] ?? '';
+		if ( is_string( $raw ) ) {
+			return sanitize_text_field( wp_unslash( $raw ) );
+		}
+		if ( is_array( $raw ) ) {
+			return map_deep( wp_unslash( $raw ), 'sanitize_text_field' );
+		}
+		return null;
+	}
+
+	/**
 	 * Only update a single product after checking its dedicated editor nonce.
 	 * The WooCommerce product editor also checks its own save nonce.
 	 */
@@ -105,13 +121,11 @@ final class OrderDeadline {
 		if ( ! $product->is_type( 'simple' ) || ! current_user_can( 'edit_post', $product->get_id() ) ) {
 			return;
 		}
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified immediately below.
-		$nonce = $_POST['p9od_order_deadline_nonce'] ?? '';
-		if ( ! is_string( $nonce ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $nonce ) ), 'p9od_save_order_deadline' ) ) {
+		$nonce = self::posted( 'p9od_order_deadline_nonce' );
+		if ( ! is_string( $nonce ) || ! wp_verify_nonce( $nonce, 'p9od_save_order_deadline' ) ) {
 			return;
 		}
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified above.
-		self::save_value( $product, $_POST['p9od_order_deadline'] ?? '' );
+		self::save_value( $product, self::posted( 'p9od_order_deadline' ) );
 	}
 
 	/** WooCommerce additionally verifies its AJAX variation-save nonce. */
@@ -119,14 +133,12 @@ final class OrderDeadline {
 		if ( ! current_user_can( 'edit_post', $variation->get_parent_id() ) ) {
 			return;
 		}
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified immediately below.
-		$nonces = $_POST['p9od_variation_deadline_nonce'] ?? array();
+		$nonces = self::posted( 'p9od_variation_deadline_nonce' );
 		if ( ! is_array( $nonces ) || ! isset( $nonces[ $loop ] ) || ! is_string( $nonces[ $loop ] ) ||
-			! wp_verify_nonce( sanitize_text_field( wp_unslash( $nonces[ $loop ] ) ), 'p9od_save_variation_deadline_' . $variation->get_id() ) ) {
+			! wp_verify_nonce( $nonces[ $loop ], 'p9od_save_variation_deadline_' . $variation->get_id() ) ) {
 			return;
 		}
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified above.
-		$values = $_POST['p9od_variation_order_deadline'] ?? array();
+		$values = self::posted( 'p9od_variation_order_deadline' );
 		if ( ! is_array( $values ) || ! array_key_exists( $loop, $values ) ) {
 			return;
 		}
@@ -138,7 +150,7 @@ final class OrderDeadline {
 			if ( ! is_string( $raw ) ) {
 				throw new \InvalidArgumentException( __( 'Ungültiger Bestellschluss.', 'patsch9-orderdate' ) );
 			}
-			$timestamp = self::parse_local( sanitize_text_field( wp_unslash( $raw ) ), wp_timezone() );
+			$timestamp = self::parse_local( $raw, wp_timezone() );
 			if ( null === $timestamp ) {
 				$product->delete_meta_data( self::META );
 			} else {
