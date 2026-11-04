@@ -70,6 +70,6 @@ jobs:
           PRERELEASE: ${{ needs.build.outputs.prerelease }}
         run: |
           set -euo pipefail
-          args=(release create "$VERSION" "patsch9-orderdate-$VERSION.zip" "patsch9-orderdate-$VERSION.zip.sha256" --verify-tag --title "Patsch9 Orderdate for WooCommerce $VERSION" --generate-notes)
+          args=(release create "$VERSION" "patsch9-orderdate-$VERSION.zip" "patsch9-orderdate-$VERSION.zip.sha256" --verify-tag --title "Patsch9 Pickup- and Orderdate Manager $VERSION" --generate-notes)
           if [[ "$PRERELEASE" == true ]]; then args+=(--prerelease --latest=false); fi
           gh "${args[@]}"
