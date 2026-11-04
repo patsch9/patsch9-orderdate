@@ -1,6 +1,8 @@
-# Patsch9 Orderdate for WooCommerce
+# Patsch9 Pickup- and Orderdate Manager
 
-Abholtermine je Produkt: Auswahl auf der Produktseite oder als gemeinsamer Termin im klassischen WooCommerce-Checkout und im Checkout Block. Release **2026.11.1**.
+Abhol- und Bestelltermine für WooCommerce: individuelle Terminwahl je Produkt oder im Checkout, Abholmanager, Kundenbenachrichtigungen und Zahlung vor Ort. Release-Serie **2026.11.1**.
+
+**Hinweis zur Umbenennung:** Der sichtbare Plugin-Name wurde geändert. Der Installationsordner und Slug `patsch9-orderdate` bleiben für bestehende Installationen und Updates erhalten. Konfigurationen, Metadaten, Zahlungsarten, Checkout-Blöcke und Übersetzungsschlüssel werden nicht umbenannt.
 
 ## Funktionsumfang
 
@@ -90,4 +92,4 @@ Bei **Abholung umplanen** eine Position und einen der verfügbaren Termine wähl
 
 Die neuen Status gelten für die gesamte Bestellung. Bei mehreren Terminen ist „Abgeholt“ erst nach der vollständigen Übergabe zu setzen. Es gibt keine separate Teilabholungsverwaltung. Umplanung nutzt die aktuellen Produktregeln; gelöschte oder deaktivierte Produkte müssen zuerst wieder mit gültigen Regeln versehen werden. Veraltete Zeitfenster werden nach Regeländerungen nicht akzeptiert.
 
-WooCommerce übernimmt die Ortsauswahl im Checkout. Orderdate verwendet den dort gespeicherten Namen und die Adresse; spätere Änderungen der Abholorte schreiben alte Bestellungen nicht um. Die klassische Abholversandart besitzt keine native Filialadressliste, hier wird die konfigurierte Versandbezeichnung angezeigt. Es gibt keine zweite Ortsauswahl und keine unterschiedlichen Terminregeln je Filiale.
+WooCommerce übernimmt die Ortsauswahl im Checkout. Das Plugin verwendet den dort gespeicherten Namen und die Adresse; spätere Änderungen der Abholorte schreiben alte Bestellungen nicht um. Die klassische Abholversandart besitzt keine native Filialadressliste, hier wird die konfigurierte Versandbezeichnung angezeigt. Es gibt keine zweite Ortsauswahl und keine unterschiedlichen Terminregeln je Filiale.
