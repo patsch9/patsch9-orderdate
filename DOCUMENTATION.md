@@ -1,5 +1,12 @@
 # Entwicklung und Architektur
 
+## Markenname und technische Identität
+
+- Sichtbarer Plugin-Name: **Patsch9 Pickup- and Orderdate Manager**.
+- Installationsslug/-ordner, Hauptdatei, Textdomain, Store-API-Namespace, Konfigurations- und Metaschlüssel sowie Präfix `p9od` bleiben **patsch9-orderdate** bzw. unverändert, damit WordPress die Erweiterung als Update erkennt und bestehende Bestellungen und Einstellungen weiter funktionieren.
+- Die WooCommerce-Menüpunkte „Abholtermine“ und „Abholmanager“ bezeichnen die jeweiligen Funktionen und bleiben bewusst knapp. Der Markenname wird innerhalb der Verwaltungsseiten ausgewiesen.
+- Der neue Name erscheint im Plugin-Header, der WordPress-Readme, der Repository-README und im Titel künftiger GitHub-Releases. Ältere Release-Einträge werden dadurch nicht rückwirkend geändert.
+
 ## Verantwortlichkeiten
 
 - `Rules`: strikt validierte Kalenderregeln ohne Request-/WooCommerce-Zustand; eine gemeinsame Engine für alle Auswahlorte.
