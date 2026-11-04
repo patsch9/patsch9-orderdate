@@ -11,6 +11,8 @@ Für **einfache Produkte** unter *Produktdaten → Allgemein → Bestellbar bis*
 
 Die Einschränkung gilt unabhängig von Versandart, Abholtermin und Zahlungsart. Sie wird nicht nur in der Produktansicht, sondern auch beim Hinzufügen zum Warenkorb und erneut beim Checkout überprüft. Das frühere Feld *Bestellschluss* in den Abholregeln ist weiterhin nur eine Termin-Vorlaufregel und arbeitet unabhängig davon.
 
+**Hinweise für Kunden:** Auf Produktseiten wird eine gesetzte Frist mit Datum und Uhrzeit angezeigt. Nach Ablauf steht dort ausdrücklich, dass der Artikel nicht mehr bestellt werden kann. Bei Varianten wird der jeweilige Hinweis nach Auswahl der Variante angezeigt; abgelaufene Varianten bleiben zur Information auswählbar, aber nicht kaufbar. Das Datumfeld im Produkteditor ist an das Layout der übrigen WooCommerce-Felder angepasst.
+
 ## Funktionsumfang
 
 - Pro Produkt deaktivierbar oder Auswahl am Produkt / an der Kasse.
