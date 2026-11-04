@@ -200,8 +200,8 @@ final class OrderDeadline {
 		if ( self::expired( $product ) ) {
 			return __( 'Bestellschluss erreicht: Dieser Artikel kann nicht mehr bestellt werden.', 'patsch9-orderdate' );
 		}
-		/* translators: %s: Date and time in the WordPress shop timezone. */
 		return sprintf(
+			/* translators: %s: Date and time in the WordPress shop timezone. */
 			__( 'Bestellbar bis: %s Uhr.', 'patsch9-orderdate' ),
 			wp_date( get_option( 'date_format' ) . ' H:i', (int) $raw, wp_timezone() )
 		);
