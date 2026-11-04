@@ -6,6 +6,10 @@ function __( string $message, string $domain = '' ): string {
 	return $message;
 }
 
+function esc_html__( string $message, string $domain = '' ): string {
+	return $message;
+}
+
 require dirname( __DIR__ ) . '/includes/class-order-deadline.php';
 
 use Patsch9\Orderdate\OrderDeadline;
