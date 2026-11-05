@@ -5,13 +5,17 @@ Abhol- und Bestelltermine für WooCommerce: individuelle Terminwahl je Produkt o
 **Hinweis zur Umbenennung:** Der sichtbare Plugin-Name wurde geändert. Der Installationsordner und Slug `patsch9-orderdate` bleiben für bestehende Installationen und Updates erhalten. Konfigurationen, Metadaten, Zahlungsarten, Checkout-Blöcke und Übersetzungsschlüssel werden nicht umbenannt.
 
 
-### Absoluter Bestellschluss für Artikel
+### Bestellzeitraum („Bestellbar ab“ / „Bestellbar bis“)
 
-Für **einfache Produkte** unter *Produktdaten → Allgemein → Bestellbar bis* ein optionales Datum mit Uhrzeit setzen. Bei **variablen Produkten** ist das Feld in jeder Variante separat einstellbar. Ohne Eintrag bleibt der Verkauf zeitlich unbegrenzt. Der Zeitpunkt bezieht sich auf die eingestellte WordPress-Shop-Zeitzone; ab Beginn der angegebenen Minute kann der Artikel nicht mehr bestellt werden.
+Einfache Produkte: **Produktdaten → Allgemein**, direkt nach den Preisfeldern. Variable Produkte: **Produktdaten → Varianten**, individuell unter den Preisen jeder Variante. Beide Felder sind optional und verwenden die WordPress-Shop-Zeitzone. Ein leerer Start bedeutet sofort bestellbar, ein leeres Ende keine zeitliche Befristung. Werden beide Felder gesetzt, muss der Start **vor** dem Ende liegen.
 
-Die Einschränkung gilt unabhängig von Versandart, Abholtermin und Zahlungsart. Sie wird nicht nur in der Produktansicht, sondern auch beim Hinzufügen zum Warenkorb und erneut beim Checkout überprüft. Das frühere Feld *Bestellschluss* in den Abholregeln ist weiterhin nur eine Termin-Vorlaufregel und arbeitet unabhängig davon.
+- **Bestellbar ab:** Vor Beginn kann ein Artikel nicht gekauft werden; die Produktseite zeigt „Bestellbar ab: [Datum/Uhrzeit]“. Sobald der Start erreicht ist, wird der Hinweis nicht mehr ausgegeben. Bleibt eine bereits geöffnete Produktseite offen, wird sie am Startzeitpunkt einmal aktualisiert, damit WooCommerce die Kaufbarkeit neu prüft.
+- **Bestellbar bis:** Bis zum Beginn der angegebenen Minute kann gekauft werden. Danach zeigt die Produktseite „Bestellschluss erreicht: Dieser Artikel kann nicht mehr bestellt werden.“
+- **Kombination:** Vor Beginn steht der Start-Hinweis. Ab Beginn entfällt er; die noch gültige Endfrist wird angezeigt. Nach Ablauf wird der Verkauf gesperrt.
+- **Sicherheit:** Die Fristen sind unabhängig von Versand, Abholung und Zahlungsart. Classic und Store API prüfen beim Hinzufügen, bei Änderungen des Warenkorbs und beim Checkout erneut. Bereits gefüllte Warenkörbe umgehen die Sperre nicht. Ungültige Felder werden nicht gespeichert; ein fehlerhafter gespeicherter Zeitstempel sperrt vorsorglich die Bestellung.
+- **Zahlung vor Ort:** Die Freigabe pro Produkt liegt jetzt unter **Produktdaten → Erweitert → Vor Ort zahlen**. Kategorienvererbung und die bisherigen Einstellungen bleiben unverändert.
 
-**Hinweise für Kunden:** Auf Produktseiten wird eine gesetzte Frist mit Datum und Uhrzeit angezeigt. Nach Ablauf steht dort ausdrücklich, dass der Artikel nicht mehr bestellt werden kann. Bei Varianten wird der jeweilige Hinweis nach Auswahl der Variante angezeigt; abgelaufene Varianten bleiben zur Information auswählbar, aber nicht kaufbar. Das Datumfeld im Produkteditor ist an das Layout der übrigen WooCommerce-Felder angepasst.
+Der frühere tägliche „Bestellschluss“ der **Abholregeln** beeinflusst weiterhin nur den frühesten Abholtermin und ist nicht mit dem neuen absoluten Bestellzeitraum zu verwechseln.
 
 ## Funktionsumfang
 

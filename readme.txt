@@ -39,9 +39,11 @@ WooCommerce is a trademark of Automattic Inc. This independent extension is not 
 
 German setup and development documentation is available in the repository README.md.
 
-Absolute Bestellfrist: Einfache Artikel und einzelne Produktvarianten können unabhängig von Versand- und Abholart mit einem optionalen Datum samt Uhrzeit ("Bestellbar bis") versehen werden. Ab Fristablauf verhindert eine serverseitige Prüfung das Hinzufügen und den Checkout, auch bei schon gefülltem Warenkorb.
+Optional sale start and end ("Bestellbar ab" / "Bestellbar bis") are available for simple products and individually for variations. Both are in the pricing section of the WooCommerce editor. A valid sale start must precede the end; either boundary may be left blank. Orderability is checked server-side in the classic cart and checkout as well as the Store API, regardless of shipping or pickup mode.
 
-A configured deadline is displayed on the simple product page, or after selecting a variation. Expired products show a clear unavailable message. Expired variations remain selectable for explanation but cannot be purchased.
+Before the start, customers see the start date and cannot order. Once sales open, the start notice disappears and any remaining end date is shown. After the end, the product is visibly unavailable. Existing carts cannot bypass these restrictions.
+
+The product-level permission for payment at pickup is configured under Product data > Advanced. Category inheritance and saved settings remain unchanged.
 
 == Installation ==
 

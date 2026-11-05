@@ -1,8 +1,8 @@
 /* Patsch9 Orderdate admin UI. Keep selectors scoped to WooCommerce screens. */
 
 
-/* Keep the native datetime field aligned with WooCommerce's other General fields. */
-#general_product_data .p9od-order-deadline-field > input[type="datetime-local"] {
+/* Product ordering windows sit beside WooCommerce's regular and sale prices. */
+#general_product_data .p9od-order-availability-field > input[type="datetime-local"] {
 	box-sizing: border-box;
 	margin: 0 !important;
 	width: 50%;
@@ -11,30 +11,70 @@
 	vertical-align: middle;
 }
 
-#general_product_data .p9od-order-deadline-field > .description,
-#variable_product_options .p9od-variation-deadline-field > .description {
+#general_product_data .p9od-order-availability-field > .description {
 	display: block;
-	margin: 6px 0 0;
+	margin-top: 5px;
 	line-height: 1.5;
 }
 
-#variable_product_options .p9od-variation-deadline-field {
-	box-sizing: border-box;
+/* In the variation pricing area, label, control and explanation share a column. */
+#variable_product_options .p9od-variation-availability-grid {
+	display: grid;
 	clear: both;
-	width: 100%;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px 22px;
+	box-sizing: border-box;
+	margin: 10px 0 18px;
 }
 
-#variable_product_options .p9od-variation-deadline-field > input[type="datetime-local"] {
+#variable_product_options .p9od-variation-availability-grid > .p9od-variation-availability-field {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 5px;
 	box-sizing: border-box;
-	width: min(100%, 24rem);
-	max-width: 100%;
+	float: none !important;
+	clear: none !important;
+	width: 100% !important;
+	min-width: 0;
 	margin: 0 !important;
+	padding: 0 !important;
+}
+
+#variable_product_options .p9od-variation-availability-field > label {
+	display: block !important;
+	float: none !important;
+	width: 100% !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	line-height: 1.4;
+}
+
+#variable_product_options .p9od-variation-availability-field > input[type="datetime-local"] {
+	float: none !important;
+	box-sizing: border-box;
+	display: block;
+	width: 100% !important;
+	max-width: 100% !important;
+	margin: 0 !important;
+	min-height: 36px;
+}
+
+#variable_product_options .p9od-variation-availability-field > .description {
+	float: none !important;
+	display: block;
+	width: 100%;
+	margin: 0 !important;
+	line-height: 1.5;
 }
 
 @media screen and (max-width: 782px) {
-	#general_product_data .p9od-order-deadline-field > input[type="datetime-local"],
-	#variable_product_options .p9od-variation-deadline-field > input[type="datetime-local"] {
+	#general_product_data .p9od-order-availability-field > input[type="datetime-local"] {
 		width: 100%;
+	}
+	#variable_product_options .p9od-variation-availability-grid {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 16px;
 	}
 }
 

@@ -71,12 +71,16 @@ Der absolute Bestellschluss **„Bestellbar bis“** ist unabhängig von der bis
 - Verbindliche Prüfungen: klassisches Add-to-Cart, Store API Add-to-Cart, Store API Mengenänderungen, klassische Warenkorbfehler, Store API Cart Errors sowie letzte Validierung beim Classic- und Block-Checkout über Plugin::errors. Die tatsächlich ausgewählte Varianten-ID wird immer gegenüber der jeweiligen Varianten-Frist geprüft, nicht gegenüber der Eltern-ID. Auch vorhandene Warenkörbe werden beim Abschluss neu validiert.
 - Testfälle: Winter-/Sommerzeit, ungültige Datumswerte, Sommerzeitlücke, Pflicht-Nonce/Berechtigung, persistierte Werte, einzelne Varianten, Classic/Store-API-Hinzufügen und Checkout nach Ablauf.
 
-## Produktanzeige und Feldlayout bei Bestellschluss
+## Absolute Verkaufsfreigabe und Bestellschluss
 
-- Das einfache Produkt zeigt die lokale Frist vor dem Warenkorb-Formular über den Standard-Hook `woocommerce_single_product_summary` an; nach Ablauf oder bei beschädigtem gespeicherten Wert erscheint eine Fehlermeldung. Es werden nur Produkte mit gesetzter Frist erwähnt.
-- Variationen bekommen die Nachricht über `woocommerce_available_variation` in `availability_html`. Eine abgelaufene Variante bleibt auswählbar, um den Grund anzuzeigen; der Kauf bleibt über `woocommerce_variation_is_purchasable`, die Warenkorbvalidierung und beide Checkouts gesperrt. WooCommerce-eigene Deaktivierungsgründe bleiben unverändert.
-- Der Hilfetext des `datetime-local`-Feldes im allgemeinen Produkteditor steht unter dem Eingabefeld statt als vorangestelltes Symbol. Feldbreite/Abstand werden nur mit spezifischen CSS-Selektoren für die Orderdate-Frist korrigiert. Andere Produktdatenfelder und der Abholkalender bleiben unberührt.
-- Browser-Regression: einfache Produkte vor/nach Frist und getrennte Variantenanzeigen nach Auswahl; PHP-Integration: Fristtexte, Varianten-Antwort und weiterhin gesperrte Kaufbarkeit.
+- Einfache Produkte: `woocommerce_product_options_pricing` unmittelbar unter den Preisen; Varianten: `woocommerce_variation_options_pricing`, mit gemeinsamem responsivem Grid für beide Felder. Der editorseitige Tooltip ist durch einen statischen Beschreibungstext ersetzt. Die übrigen Produktfelder sowie der Abholkalender bleiben unverändert.
+- `Bestellbar ab` verwendet Meta `_p9od_order_available_from`, `Bestellbar bis` weiterhin `_p9od_order_deadline`. Beide sind UTC-Unix-Zeitstempel als String, deren Eingabe streng in der WordPress-Shop-Zeitzone geparst wird. Lücken der Sommerzeit und ungültige Datumswerte werden zurückgewiesen.
+- Beide Felder sind optional. Bei gemeinsam gesetzten Fristen muss `ab < bis` gelten. Die Speicherung nutzt vorhandene Produkt-/Varianten-Nonces, Capability-Prüfung und WooCommerce CRUD und validiert beide Werte **vor** jeder Mutation. Bestehende Felder werden bei nicht übermittelten Parametern nicht geleert. Ungültige gespeicherte Werte sperren Verkäufe (fail closed).
+- `OrderDeadline::not_started()` erkennt noch nicht gestartete Verkäufe, `::expired()` den Bestellschluss, `::blocked()` beide. Sämtliche bereits abgesicherten Kaufwege nutzen `::blocked()`: Kaufbarkeit, Classic/Store API add-to-cart, Store API Mengenanpassungen und Warenkorbfehler sowie Classic/Block-Checkout. Eine bestehende Bestellung bleibt unverändert.
+- `Bestellbar ab` erscheint bis zum Beginn auf einfachen Produktseiten, bei Varianten nach Auswahl der Variante über `availability_html`. Sobald die Freigabe erreicht ist, verschwindet dieser Text bei einer neuen serverseitigen Darstellung (ein kleiner nur auf Produktseiten geladener Script aktualisiert im offenen Tab einmal die Seite, damit auch die Kaufbarkeit neu bewertet wird). Ist `Bestellbar bis` konfiguriert, bleibt dieser Hinweis bis zum Ablauf sichtbar; ab dann erscheint die Sperrmeldung.
+- `Vor Ort zahlen` wird nun über `woocommerce_product_options_advanced` ausgegeben; die Produktmetadaten, Kategorievererbung und Checkout-Gateway-Logik bleiben gleich.
+- Regressionen: PHP-Datum und Zeitzone, ab/bis-Reihenfolge und atomare Speicherung, Simple/Variation, Kaufbarkeit und Classic-/Store-API-Checkout, HTML-Hinweise und UI-Feldpositionen im echten Browser.
+
 
 ## Abholablauf (2026.11.1-beta3)
 

@@ -65,6 +65,13 @@ const base = process.env.P9OD_TEST_URL || 'http://localhost:8888';
     await futureNotice.waitFor();
     assert.match(await futureNotice.innerText(), /Bestellbar bis:/, 'Simple product announces its deadline');
     assert.equal(await page.locator('button.single_add_to_cart_button').isVisible(), true, 'Future deadline keeps add-to-cart enabled');
+    await page.goto(base + '/?p=' + fixtures.deadline_pending);
+    const startNotice = page.locator('.p9od-order-deadline--pending');
+    await startNotice.waitFor();
+    assert.match(await startNotice.innerText(), /Bestellbar ab:/, 'Upcoming sale start is shown on product page');
+    const openAt = Number(await startNotice.getAttribute('data-p9od-open-at'));
+    assert.ok(openAt > Math.floor(Date.now() / 1000), 'Upcoming sale start is scheduled in UTC');
+    assert.equal(await page.locator('button.single_add_to_cart_button').count(), 0, 'Not-yet-orderable product cannot be added');
     await page.goto(base + '/?p=' + fixtures.deadline_expired);
     const expiredNotice = page.locator('.p9od-order-deadline--expired');
     await expiredNotice.waitFor();
@@ -80,6 +87,24 @@ const base = process.env.P9OD_TEST_URL || 'http://localhost:8888';
     await page.locator('.woocommerce-variation-availability .p9od-order-deadline:not(.p9od-order-deadline--expired)').waitFor();
     assert.match(await page.locator('.woocommerce-variation-availability .p9od-order-deadline').innerText(), /Bestellbar bis:/);
     assert.equal(await page.locator('.woocommerce-variation-add-to-cart-enabled').count(), 1, 'Future variation is still purchasable');
+    await variationSelect.selectOption({ label: 'Pending' });
+    const pendingVariation = page.locator('.woocommerce-variation-availability .p9od-order-deadline--pending');
+    await pendingVariation.waitFor();
+    assert.match(await pendingVariation.innerText(), /Bestellbar ab:/, 'Selected variation shows its independent sale start');
+    assert.equal(await page.locator('.woocommerce-variation-add-to-cart-enabled').count(), 0, 'Pending variation remains unpurchasable');
+    // Admin fields are rendered in their appropriate WooCommerce panels.
+    await page.goto(base + '/wp-admin/post.php?post=' + fixtures.deadline_future + '&action=edit');
+    if (await page.locator('#user_login').count()) {
+      await page.locator('#user_login').fill('admin');
+      await page.locator('#user_pass').fill('password');
+      await Promise.all([page.waitForNavigation(), page.locator('#wp-submit').click()]);
+    }
+    await page.locator('#general_product_data #p9od_order_available_from').waitFor();
+    assert.equal(await page.locator('#general_product_data .pricing #p9od_order_deadline').count(), 1, 'Deadline lives in pricing rather than below warranty');
+    assert.equal(await page.locator('#general_product_data .pricing #p9od_order_available_from').count(), 1, 'Sale start lives next to sale deadline in pricing');
+    assert.equal(await page.locator('#general_product_data #p9od_pay_on_pickup').count(), 0, 'Payment selection was removed from general product settings');
+    assert.equal(await page.locator('#advanced_product_data #p9od_pay_on_pickup').count(), 1, 'Payment selection was moved to Advanced');
+
     assert.deepEqual(errors, [], 'No uncaught frontend exceptions');
     console.log('Product, classic checkout and Checkout Block browser assertions passed.');
   } catch (error) {
