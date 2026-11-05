@@ -205,6 +205,10 @@ try {
 	$variation->save();
 	$GLOBALS['p9od_test_products'][] = $variation->get_id();
 	p9od_assert( 'product' === Plugin::rule( $variation->get_id() )['mode'], 'Variation inherits parent rules' );
+	// The CLI integration runner does not preload WooCommerce's admin field helpers.
+	if ( ! function_exists( 'woocommerce_wp_text_input' ) ) {
+		require_once WC()->plugin_path() . '/includes/admin/wc-meta-box-functions.php';
+	}
 	// Editor location: simple product windows under pricing, pay-on-pickup in Advanced.
 	global $product_object;
 	$original_product_object = $product_object ?? null;
