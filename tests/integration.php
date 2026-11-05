@@ -205,6 +205,19 @@ try {
 	$variation->save();
 	$GLOBALS['p9od_test_products'][] = $variation->get_id();
 	p9od_assert( 'product' === Plugin::rule( $variation->get_id() )['mode'], 'Variation inherits parent rules' );
+	// Editor location: simple product windows under pricing, pay-on-pickup in Advanced.
+	global $product_object;
+	$original_product_object = $product_object ?? null;
+	$product_object = $off;
+	ob_start();
+	do_action( 'woocommerce_product_options_pricing' );
+	$pricing_html = ob_get_clean();
+	p9od_assert( str_contains( $pricing_html, 'p9od_order_available_from' ) && str_contains( $pricing_html, 'p9od_order_deadline' ), 'Both sale window fields are rendered below the simple product prices' );
+	ob_start();
+	do_action( 'woocommerce_product_options_advanced' );
+	$advanced_html = ob_get_clean();
+	p9od_assert( str_contains( $advanced_html, 'name="p9od_pay_on_pickup"' ), 'Pay-on-pickup product control appears under Advanced' );
+	$product_object = $original_product_object;
 	// Absolute order deadlines are independent of pickup rules or shipping methods.
 	$future_deadline = current_datetime()->modify( '+1 day' )->format( 'Y-m-d\TH:i' );
 	$past_deadline = current_datetime()->modify( '-1 day' )->format( 'Y-m-d\TH:i' );
@@ -223,6 +236,36 @@ try {
 	p9od_assert( ! OrderDeadline::expired( wc_get_product( $off->get_id() ) ), 'Future deadline permits sales' );
 	p9od_assert( str_contains( OrderDeadline::notice_text( $off ), wp_date( get_option( 'date_format' ) . ' H:i', (int) $saved_deadline, wp_timezone() ) ), 'Future deadline notice contains shop-local date and time' );
 	p9od_assert( str_contains( OrderDeadline::notice_html( $off ), 'p9od-order-deadline' ), 'Simple product gets a frontend deadline notice' );
+	$future_start = current_datetime()->modify( '+30 minutes' )->format( 'Y-m-d\TH:i' );
+	$_POST['p9od_order_available_from'] = $future_start;
+	OrderDeadline::save_simple( $off );
+	$off->save();
+	$start_timestamp = OrderDeadline::parse_local( $future_start, wp_timezone() );
+	p9od_assert( (string) $start_timestamp === wc_get_product( $off->get_id() )->get_meta( OrderDeadline::META_FROM, true ), 'Product ordering start stored as a UTC timestamp' );
+	p9od_assert( OrderDeadline::not_started( $off ) && OrderDeadline::blocked( $off ) && ! OrderDeadline::expired( $off ), 'Future ordering start restricts a product even before its deadline' );
+	p9od_assert( ! OrderDeadline::purchasable( true, $off ), 'Product remains non-purchasable before its start time' );
+	p9od_assert( str_contains( OrderDeadline::notice_text( $off ), 'Bestellbar ab:' ), 'Future ordering start has a dedicated notice' );
+	wc_clear_notices();
+	p9od_assert( ! apply_filters( 'woocommerce_add_to_cart_validation', true, $off->get_id(), 1, 0 ), 'Classic add-to-cart rejects a product before its start' );
+	$_POST = array();
+	$not_started_add = p9od_rest( 'cart/add-item', array( 'id' => $off->get_id(), 'quantity' => 1 ) );
+	p9od_assert( $not_started_add->get_status() >= 400, 'Store API add-to-cart rejects a product before its start' );
+	$_POST = array(
+		'p9od_order_deadline_nonce' => wp_create_nonce( 'p9od_save_order_deadline' ),
+		'p9od_order_available_from' => current_datetime()->modify( '+2 days' )->format( 'Y-m-d\TH:i' ),
+		'p9od_order_deadline' => $future_deadline,
+	);
+	OrderDeadline::save_simple( $off );
+	p9od_assert( (string) $start_timestamp === $off->get_meta( OrderDeadline::META_FROM, true ) &&
+		(string) $saved_deadline === $off->get_meta( OrderDeadline::META, true ), 'Invalid window never partially overwrites the stored dates' );
+	$off->update_meta_data( OrderDeadline::META_FROM, (string) ( time() - 60 ) );
+	$off->save();
+	p9od_assert( ! OrderDeadline::not_started( $off ) && ! OrderDeadline::blocked( $off ), 'Ordering start restriction automatically expires when its time passes' );
+	p9od_assert( ! str_contains( OrderDeadline::notice_text( $off ), 'Bestellbar ab:' ) &&
+		str_contains( OrderDeadline::notice_text( $off ), 'Bestellbar bis:' ), 'Start notice disappears after availability begins and valid end notice remains' );
+	$off->delete_meta_data( OrderDeadline::META_FROM );
+	$off->save();
+	$_POST['p9od_order_available_from'] = '';
 	$_POST['p9od_order_deadline'] = '2027-02-30T12:00';
 	OrderDeadline::save_simple( $off );
 	p9od_assert( (string) $saved_deadline === (string) $off->get_meta( OrderDeadline::META, true ), 'Invalid simple date cannot replace valid deadline' );
@@ -280,6 +323,16 @@ try {
 	p9od_assert( ! has_filter( 'woocommerce_variation_is_active', array( OrderDeadline::class, 'variation_active' ) ), 'Deadline does not hide variation options before users can read the reason' );
 	p9od_assert( str_contains( OrderDeadline::variation_data( array( 'availability_html' => '' ), $parent, $variation )['availability_html'], 'Bestellbar bis:' ), 'Future variation shows deadline in native WooCommerce availability' );
 	p9od_assert( str_contains( OrderDeadline::variation_data( array( 'availability_html' => '' ), $parent, $expired_variation )['availability_html'], 'p9od-order-deadline--expired' ), 'Expired variation shows reason when selected' );
+	$variation->update_meta_data( OrderDeadline::META_FROM, (string) ( time() + 3600 ) );
+	$variation->save();
+	p9od_assert( OrderDeadline::not_started( $variation ) && ! OrderDeadline::purchasable( true, $variation ), 'Individual variation cannot be purchased before its start' );
+	p9od_assert( str_contains( OrderDeadline::variation_data( array( 'availability_html' => '' ), $parent, $variation )['availability_html'], 'Bestellbar ab:' ), 'Individual variation shows its own future start' );
+	p9od_assert( OrderDeadline::expired( $expired_variation ) && ! OrderDeadline::not_started( $expired_variation ), 'Other variation remains independently restricted by its end' );
+	$variation->update_meta_data( OrderDeadline::META_FROM, (string) ( time() - 60 ) );
+	$variation->save();
+	p9od_assert( ! OrderDeadline::not_started( $variation ) && str_contains( OrderDeadline::notice_text( $variation ), 'Bestellbar bis:' ), 'Start notice is gone once selected variation opens' );
+	$variation->delete_meta_data( OrderDeadline::META_FROM );
+	$variation->save();
 	$_POST = array( 'p9od_variation_deadline_nonce' => array( 0 => 'invalid' ), 'p9od_variation_order_deadline' => array( 0 => $past_deadline ) );
 	OrderDeadline::save_variation( $variation, 0 );
 	p9od_assert( ! OrderDeadline::expired( $variation ), 'Invalid variation nonce cannot change deadline' );
