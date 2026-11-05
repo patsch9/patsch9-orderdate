@@ -25,8 +25,8 @@
       if (window.sessionStorage.getItem(key)) return;
       window.sessionStorage.setItem(key, '1');
     } catch (error) {
-      // Browsers with blocked storage may still refresh once per page load.
-      if (window.location.hash === '#p9od-refreshed') return;
+      // Without session storage, don't risk a repeated reload on cached pages.
+      return;
     }
     window.location.reload();
   }
