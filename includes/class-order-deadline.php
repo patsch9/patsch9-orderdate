@@ -96,6 +96,7 @@ final class OrderDeadline {
 
 	public static function variation_field( int $loop, array $variation_data, \WP_Post $variation ): void {
 		$product = wc_get_product( $variation->ID );
+		echo '<div class="p9od-variation-availability-grid">';
 		foreach ( array(
 			self::META_FROM => array( 'p9od_variation_order_available_from', __( 'Bestellbar ab', 'patsch9-orderdate' ), true ),
 			self::META      => array( 'p9od_variation_order_deadline', __( 'Bestellbar bis', 'patsch9-orderdate' ), false ),
@@ -110,6 +111,7 @@ final class OrderDeadline {
 				'description' => self::description( $field[2] ),
 			) );
 		}
+		echo '</div>';
 		wp_nonce_field( 'p9od_save_variation_deadline_' . $variation->ID, 'p9od_variation_deadline_nonce[' . $loop . ']' );
 	}
 
