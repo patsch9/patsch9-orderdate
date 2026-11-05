@@ -32,19 +32,22 @@ foreach ( array( 'product', 'checkout', 'checkout_other' ) as $mode ) {
 // Independent product deadlines and variation notices (no pickup dates required).
 $future_deadline = (string) ( time() + 2 * DAY_IN_SECONDS );
 $past_deadline = (string) ( time() - HOUR_IN_SECONDS );
-foreach ( array( 'future' => $future_deadline, 'expired' => $past_deadline ) as $kind => $deadline ) {
+foreach ( array( 'future' => $future_deadline, 'expired' => $past_deadline, 'pending' => $future_deadline ) as $kind => $deadline ) {
 	$deadline_product = new WC_Product_Simple();
 	$deadline_product->set_name( 'Orderdate deadline fixture ' . $kind );
 	$deadline_product->set_regular_price( '10' );
 	$deadline_product->set_virtual( true );
 	$deadline_product->set_status( 'publish' );
 	$deadline_product->update_meta_data( \Patsch9\Orderdate\OrderDeadline::META, $deadline );
+	if ( 'pending' === $kind ) {
+		$deadline_product->update_meta_data( \Patsch9\Orderdate\OrderDeadline::META_FROM, (string) ( time() + HOUR_IN_SECONDS ) );
+	}
 	$deadline_product->save();
 	$ids[ 'deadline_' . $kind ] = $deadline_product->get_id();
 }
 $deadline_attribute = new WC_Product_Attribute();
 $deadline_attribute->set_name( 'Schedule' );
-$deadline_attribute->set_options( array( 'Available', 'Expired' ) );
+$deadline_attribute->set_options( array( 'Available', 'Expired', 'Pending' ) );
 $deadline_attribute->set_position( 0 );
 $deadline_attribute->set_visible( true );
 $deadline_attribute->set_variation( true );
@@ -54,13 +57,16 @@ $deadline_parent->set_status( 'publish' );
 $deadline_parent->set_attributes( array( $deadline_attribute ) );
 $deadline_parent->save();
 $ids['deadline_variable'] = $deadline_parent->get_id();
-foreach ( array( 'Available' => $future_deadline, 'Expired' => $past_deadline ) as $choice => $deadline ) {
+foreach ( array( 'Available' => $future_deadline, 'Expired' => $past_deadline, 'Pending' => $future_deadline ) as $choice => $deadline ) {
 	$deadline_variation = new WC_Product_Variation();
 	$deadline_variation->set_parent_id( $deadline_parent->get_id() );
 	$deadline_variation->set_attributes( array( 'schedule' => $choice ) );
 	$deadline_variation->set_regular_price( '10' );
 	$deadline_variation->set_status( 'publish' );
 	$deadline_variation->update_meta_data( \Patsch9\Orderdate\OrderDeadline::META, $deadline );
+	if ( 'Pending' === $choice ) {
+		$deadline_variation->update_meta_data( \Patsch9\Orderdate\OrderDeadline::META_FROM, (string) ( time() + HOUR_IN_SECONDS ) );
+	}
 	$deadline_variation->save();
 }
 WC_Product_Variable::sync( $deadline_parent->get_id() );
