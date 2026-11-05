@@ -232,7 +232,7 @@ final class Plugin {
 		$errors = array();
 		foreach ( self::cart() as $item ) {
 			$product = wc_get_product( (int) ( ( $item['variation_id'] ?? 0 ) ?: ( $item['product_id'] ?? 0 ) ) );
-			if ( $product && OrderDeadline::expired( $product ) ) {
+			if ( $product && OrderDeadline::blocked( $product ) ) {
 				$errors[] = OrderDeadline::message( $product );
 				continue;
 			}
