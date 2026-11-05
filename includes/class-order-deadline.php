@@ -289,7 +289,14 @@ final class OrderDeadline {
 		} elseif ( self::not_started( $product ) ) {
 			$class .= ' p9od-order-deadline--pending';
 		}
-		return '<p class="' . esc_attr( $class ) . '" role="status">' . esc_html( $text ) . '</p>';
+		$start_attr = '';
+		if ( self::not_started( $product ) ) {
+			$start = self::stored_timestamp( $product, self::META_FROM );
+			if ( null !== $start ) {
+				$start_attr = ' data-p9od-open-at="' . esc_attr( (string) $start ) . '"';
+			}
+		}
+		return '<p class="' . esc_attr( $class ) . '"' . $start_attr . ' role="status">' . esc_html( $text ) . '</p>';
 	}
 
 	/** Product summary is rendered even when add-to-cart is no longer shown. */
