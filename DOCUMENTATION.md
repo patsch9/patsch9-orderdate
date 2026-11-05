@@ -71,6 +71,13 @@ Der absolute Bestellschluss **„Bestellbar bis“** ist unabhängig von der bis
 - Verbindliche Prüfungen: klassisches Add-to-Cart, Store API Add-to-Cart, Store API Mengenänderungen, klassische Warenkorbfehler, Store API Cart Errors sowie letzte Validierung beim Classic- und Block-Checkout über Plugin::errors. Die tatsächlich ausgewählte Varianten-ID wird immer gegenüber der jeweiligen Varianten-Frist geprüft, nicht gegenüber der Eltern-ID. Auch vorhandene Warenkörbe werden beim Abschluss neu validiert.
 - Testfälle: Winter-/Sommerzeit, ungültige Datumswerte, Sommerzeitlücke, Pflicht-Nonce/Berechtigung, persistierte Werte, einzelne Varianten, Classic/Store-API-Hinzufügen und Checkout nach Ablauf.
 
+## Produktanzeige und Feldlayout bei Bestellschluss
+
+- Das einfache Produkt zeigt die lokale Frist vor dem Warenkorb-Formular über den Standard-Hook `woocommerce_single_product_summary` an; nach Ablauf oder bei beschädigtem gespeicherten Wert erscheint eine Fehlermeldung. Es werden nur Produkte mit gesetzter Frist erwähnt.
+- Variationen bekommen die Nachricht über `woocommerce_available_variation` in `availability_html`. Eine abgelaufene Variante bleibt auswählbar, um den Grund anzuzeigen; der Kauf bleibt über `woocommerce_variation_is_purchasable`, die Warenkorbvalidierung und beide Checkouts gesperrt. WooCommerce-eigene Deaktivierungsgründe bleiben unverändert.
+- Der Hilfetext des `datetime-local`-Feldes im allgemeinen Produkteditor steht unter dem Eingabefeld statt als vorangestelltes Symbol. Feldbreite/Abstand werden nur mit spezifischen CSS-Selektoren für die Orderdate-Frist korrigiert. Andere Produktdatenfelder und der Abholkalender bleiben unberührt.
+- Browser-Regression: einfache Produkte vor/nach Frist und getrennte Variantenanzeigen nach Auswahl; PHP-Integration: Fristtexte, Varianten-Antwort und weiterhin gesperrte Kaufbarkeit.
+
 ## Abholablauf (2026.11.1-beta3)
 
 - `PickupLocations`: WooCommerce-Versandarten `local_pickup`/`pickup_location`; native `pickup_location`-/`pickup_address`-Snapshots.

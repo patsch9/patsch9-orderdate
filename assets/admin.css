@@ -1,5 +1,43 @@
 /* Patsch9 Orderdate admin UI. Keep selectors scoped to WooCommerce screens. */
 
+
+/* Keep the native datetime field aligned with WooCommerce's other General fields. */
+#general_product_data .p9od-order-deadline-field > input[type="datetime-local"] {
+	box-sizing: border-box;
+	margin: 0 !important;
+	width: 50%;
+	max-width: 100%;
+	min-height: 34px;
+	vertical-align: middle;
+}
+
+#general_product_data .p9od-order-deadline-field > .description,
+#variable_product_options .p9od-variation-deadline-field > .description {
+	display: block;
+	margin: 6px 0 0;
+	line-height: 1.5;
+}
+
+#variable_product_options .p9od-variation-deadline-field {
+	box-sizing: border-box;
+	clear: both;
+	width: 100%;
+}
+
+#variable_product_options .p9od-variation-deadline-field > input[type="datetime-local"] {
+	box-sizing: border-box;
+	width: min(100%, 24rem);
+	max-width: 100%;
+	margin: 0 !important;
+}
+
+@media screen and (max-width: 782px) {
+	#general_product_data .p9od-order-deadline-field > input[type="datetime-local"],
+	#variable_product_options .p9od-variation-deadline-field > input[type="datetime-local"] {
+		width: 100%;
+	}
+}
+
 #woocommerce-product-data ul.wc-tabs li.p9od_options a::before {
 	font-family: dashicons;
 	content: "\f508";

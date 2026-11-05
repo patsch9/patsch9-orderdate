@@ -26,7 +26,8 @@ final class OrderDeadline {
 		add_action( 'woocommerce_admin_process_variation_object', array( self::class, 'save_variation' ), 10, 2 );
 		add_filter( 'woocommerce_is_purchasable', array( self::class, 'purchasable' ), 10, 2 );
 		add_filter( 'woocommerce_variation_is_purchasable', array( self::class, 'purchasable' ), 10, 2 );
-		add_filter( 'woocommerce_variation_is_active', array( self::class, 'variation_active' ), 10, 2 );
+		add_filter( 'woocommerce_available_variation', array( self::class, 'variation_data' ), 10, 3 );
+		add_action( 'woocommerce_single_product_summary', array( self::class, 'simple_notice' ), 25 );
 		add_filter( 'woocommerce_add_to_cart_validation', array( self::class, 'validate_add' ), 5, 4 );
 		add_action( 'woocommerce_store_api_validate_add_to_cart', array( self::class, 'validate_store_add' ), 10, 1 );
 		add_filter( 'woocommerce_store_api_cart_item_quantity_validation', array( self::class, 'validate_quantity' ), 10, 4 );
@@ -66,7 +67,7 @@ final class OrderDeadline {
 	}
 
 	private static function description(): string {
-		return __( 'Optional. Bestellungen sind nur bis zu diesem Zeitpunkt (Shop-Zeitzone) möglich, unabhängig von Versandart oder Abholtermin. Ab der angegebenen Minute ist der Artikel nicht mehr bestellbar.', 'patsch9-orderdate' );
+		return __( 'Optional. Zeitpunkt in der Shop-Zeitzone. Danach ist der Artikel unabhängig von Versandart und Abholtermin nicht mehr bestellbar.', 'patsch9-orderdate' );
 	}
 
 	public static function simple_field(): void {
@@ -75,10 +76,10 @@ final class OrderDeadline {
 			'id' => 'p9od_order_deadline',
 			'label' => __( 'Bestellbar bis', 'patsch9-orderdate' ),
 			'type' => 'datetime-local',
-			'wrapper_class' => 'show_if_simple',
+			'wrapper_class' => 'show_if_simple p9od-order-deadline-field',
 			'value' => self::field_value( $product_object instanceof WC_Product ? $product_object : null ),
 			'description' => self::description(),
-			'desc_tip' => true,
+			'desc_tip' => false,
 		) );
 		wp_nonce_field( 'p9od_save_order_deadline', 'p9od_order_deadline_nonce' );
 	}
@@ -90,7 +91,7 @@ final class OrderDeadline {
 			'name' => 'p9od_variation_order_deadline[' . $loop . ']',
 			'label' => __( 'Bestellbar bis', 'patsch9-orderdate' ),
 			'type' => 'datetime-local',
-			'wrapper_class' => 'form-row form-row-full',
+			'wrapper_class' => 'form-row form-row-full p9od-variation-deadline-field',
 			'value' => self::field_value( $product instanceof WC_Product ? $product : null ),
 			'description' => self::description(),
 		) );
@@ -182,8 +183,54 @@ final class OrderDeadline {
 		return $purchasable && ! self::expired( $product );
 	}
 
-	public static function variation_active( bool $active, WC_Product_Variation $variation ): bool {
-		return $active && ! self::expired( $variation );
+
+	/**
+	 * A product deadline is a sales restriction, not a reason to hide its
+	 * variation. Keep expired variations selectable so their explanation is
+	 * visible, while is_purchasable and the server-side guards still block sales.
+	 */
+	public static function notice_text( WC_Product $product ): string {
+		if ( ! $product->is_type( array( 'simple', 'variation' ) ) ) {
+			return '';
+		}
+		$raw = $product->get_meta( self::META, true );
+		if ( '' === $raw || null === $raw ) {
+			return '';
+		}
+		if ( self::expired( $product ) ) {
+			return __( 'Bestellschluss erreicht: Dieser Artikel kann nicht mehr bestellt werden.', 'patsch9-orderdate' );
+		}
+		return sprintf(
+			/* translators: %s: Date and time in the WordPress shop timezone. */
+			__( 'Bestellbar bis: %s Uhr.', 'patsch9-orderdate' ),
+			wp_date( get_option( 'date_format' ) . ' H:i', (int) $raw, wp_timezone() )
+		);
+	}
+
+	public static function notice_html( WC_Product $product ): string {
+		$text = self::notice_text( $product );
+		if ( '' === $text ) {
+			return '';
+		}
+		$class = self::expired( $product ) ? 'p9od-order-deadline p9od-order-deadline--expired' : 'p9od-order-deadline';
+		return '<p class="' . esc_attr( $class ) . '" role="status">' . esc_html( $text ) . '</p>';
+	}
+
+	/** Product summary is rendered even when add-to-cart is no longer shown. */
+	public static function simple_notice(): void {
+		global $product;
+		if ( $product instanceof WC_Product && $product->is_type( 'simple' ) ) {
+			echo self::notice_html( $product ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- notice_html escapes every dynamic value.
+		}
+	}
+
+	/** WooCommerce renders availability_html after a variation is selected. */
+	public static function variation_data( array $data, \WC_Product_Variable $parent, WC_Product_Variation $variation ): array {
+		$notice = self::notice_html( $variation );
+		if ( '' !== $notice ) {
+			$data['availability_html'] = (string) ( $data['availability_html'] ?? '' ) . $notice;
+		}
+		return $data;
 	}
 
 	/** Validate the exact selected variation, not merely the variable parent. */

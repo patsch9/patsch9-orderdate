@@ -59,6 +59,27 @@ const base = process.env.P9OD_TEST_URL || 'http://localhost:8888';
     assert.equal(await page.locator('select[name=p9od_checkout_date]').inputValue(), fixtures.date, 'Classic calendar updates submitted select value');
     await page.locator('#p9od_checkout_time').selectOption('14:00-15:00');
     assert.equal(await page.locator('#p9od_checkout_time').inputValue(), '14:00-15:00');
+    // Ordering deadline notices: simple products and the selected variation.
+    await page.goto(base + '/?p=' + fixtures.deadline_future);
+    const futureNotice = page.locator('.p9od-order-deadline');
+    await futureNotice.waitFor();
+    assert.match(await futureNotice.innerText(), /Bestellbar bis:/, 'Simple product announces its deadline');
+    assert.equal(await page.locator('button.single_add_to_cart_button').isVisible(), true, 'Future deadline keeps add-to-cart enabled');
+    await page.goto(base + '/?p=' + fixtures.deadline_expired);
+    const expiredNotice = page.locator('.p9od-order-deadline--expired');
+    await expiredNotice.waitFor();
+    assert.match(await expiredNotice.innerText(), /nicht mehr bestellt/, 'Expired product explains it cannot be ordered');
+    assert.equal(await page.locator('button.single_add_to_cart_button').count(), 0, 'Expired simple product cannot be added');
+    await page.goto(base + '/?p=' + fixtures.deadline_variable);
+    const variationSelect = page.locator('form.variations_form .variations select').first();
+    await variationSelect.waitFor();
+    await variationSelect.selectOption({ label: 'Expired' });
+    await page.locator('.woocommerce-variation-availability .p9od-order-deadline--expired').waitFor();
+    assert.equal(await page.locator('.woocommerce-variation-add-to-cart-enabled').count(), 0, 'Expired variation is not purchasable');
+    await variationSelect.selectOption({ label: 'Available' });
+    await page.locator('.woocommerce-variation-availability .p9od-order-deadline:not(.p9od-order-deadline--expired)').waitFor();
+    assert.match(await page.locator('.woocommerce-variation-availability .p9od-order-deadline').innerText(), /Bestellbar bis:/);
+    assert.equal(await page.locator('.woocommerce-variation-add-to-cart-enabled').count(), 1, 'Future variation is still purchasable');
     assert.deepEqual(errors, [], 'No uncaught frontend exceptions');
     console.log('Product, classic checkout and Checkout Block browser assertions passed.');
   } catch (error) {
