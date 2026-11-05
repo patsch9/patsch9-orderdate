@@ -391,6 +391,9 @@ final class Plugin {
 			return;
 		}
 		wp_enqueue_script( 'p9od-calendar', plugins_url( 'assets/calendar.js', P9OD_FILE ), array( 'jquery-ui-datepicker' ), P9OD_VERSION, true );
+		if ( is_product() ) {
+			wp_enqueue_script( 'p9od-order-availability', plugins_url( 'assets/order-availability.js', P9OD_FILE ), array( 'jquery' ), P9OD_VERSION, true );
+		}
 		wp_enqueue_style( 'p9od', plugins_url( 'assets/orderdate.css', P9OD_FILE ), array(), P9OD_VERSION );
 		global $wp_locale;
 		wp_localize_script( 'p9od-calendar', 'p9odCalendar', array(
