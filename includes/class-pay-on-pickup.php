@@ -14,7 +14,7 @@ final class PayOnPickup {
 	private const DENY    = 'no';
 
 	public static function boot(): void {
-		add_action( 'woocommerce_product_options_general_product_data', array( self::class, 'product_field' ) );
+		add_action( 'woocommerce_product_options_advanced', array( self::class, 'product_field' ) );
 		add_action( 'woocommerce_admin_process_product_object', array( self::class, 'save_product' ), 20 );
 		add_action( 'product_cat_add_form_fields', array( self::class, 'category_add_field' ) );
 		add_action( 'product_cat_edit_form_fields', array( self::class, 'category_edit_field' ) );
